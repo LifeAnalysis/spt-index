@@ -230,8 +230,8 @@ async function fetchInBatches<T>(
 }
 
 export async function getSPTIndex(protocols: string[]) {
-  // Fetch in batches of 6 protocols at a time to avoid timeout
-  const metricsWithSlugs = await fetchInBatches(protocols, 6, getProtocolData);
+  // Fetch in batches of 3 protocols at a time to stay under 10s Vercel free tier limit
+  const metricsWithSlugs = await fetchInBatches(protocols, 3, getProtocolData);
   
   const validMetrics = metricsWithSlugs.filter((m): m is ProtocolData => m !== null);
   

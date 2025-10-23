@@ -2,16 +2,21 @@ import { NextResponse } from 'next/server';
 import { getSPTIndex } from '@/lib/data';
 
 // List of protocols to fetch
+// Limited to top 10 to stay under Vercel free tier 10s timeout
 const PROTOCOLS = [
-  // DEXs
-  'uniswap', 'curve-dex', 'pancakeswap', 'sushiswap', 'balancer',
-  'raydium', 'orca', 'trader-joe', 'quickswap', 'aerodrome',
-  // Lending
-  'aave', 'compound-v3', 'makerdao', 'morpho', 'spark',
-  'justlend', 'venus', 'radiant', 'benqi'
+  // Top DEXs by TVL
+  'uniswap', 'curve-dex', 'pancakeswap', 'raydium',
+  // Top Lending by TVL
+  'aave', 'morpho', 'spark', 'compound-v3', 'makerdao', 'justlend'
 ];
 
+// Full list (for reference - requires Pro plan with longer timeout):
+// 'sushiswap', 'balancer', 'orca', 'trader-joe', 'quickswap', 'aerodrome',
+// 'venus', 'radiant', 'benqi'
+
 export const revalidate = 86400; // Revalidate every 24 hours
+export const maxDuration = 60; // Maximum execution time: 60 seconds (requires Pro plan, free tier max is 10s)
+export const dynamic = 'force-dynamic'; // Force dynamic rendering
 
 export async function GET() {
   try {
