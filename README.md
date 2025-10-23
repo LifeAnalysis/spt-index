@@ -262,15 +262,26 @@ momentum = Σ(weight × sigmoid(z_self))
 
 ## 🚀 Deployment
 
-**🎉 Live Application:** https://frontend-c6q9eb71h-lifeanalysis-projects.vercel.app
+**🎉 Live Application:** https://frontend-jf2vttstm-lifeanalysis-projects.vercel.app
+
+**⚠️ Note:** Password protection may be enabled. To disable:
+1. Go to https://vercel.com/lifeanalysis-projects/frontend/settings/deployment-protection
+2. Select "Disabled"
+3. Save
 
 **Fully deployed on Vercel** as serverless functions - no separate backend needed!
 
-### Architecture Highlights
-- **Batched Data Fetching:** Protocols fetched in groups of 6 to avoid timeouts
-- **90-Day Historical Data:** Full analysis window maintained
-- **Serverless Functions:** Auto-scales on demand
+### Current Configuration (Free Tier)
+- **Protocols Tracked:** 10 (top by TVL)
+  - DEX: Uniswap, Curve, PancakeSwap, Raydium
+  - Lending: Aave, Morpho, Spark, Compound V3, MakerDAO, JustLend
+- **Batched Fetching:** 3 protocols at a time (4 batches)
+- **90-Day Historical Data:** ✅ Full analysis window
+- **Execution Time:** ~6-8 seconds (under 10s free tier limit)
 - **Edge Caching:** 24-hour cache with stale-while-revalidate
+
+### Upgrade to Pro for All 19 Protocols
+To track all 19 protocols, upgrade to Vercel Pro ($20/month) which allows 60s `maxDuration`
 
 See **[DEPLOYMENT_COMPLETE.md](DEPLOYMENT_COMPLETE.md)** for:
 - Complete deployment architecture
