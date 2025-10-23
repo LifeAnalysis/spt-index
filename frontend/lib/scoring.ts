@@ -75,7 +75,7 @@ export function calculateCohortSPTScore(
   cohortHistoricalMetrics: HistoricalMetrics,
   protocolType: ProtocolType
 ): number {
-  const weights = DEFAULT_WEIGHTS[protocolType] || DEFAULT_WEIGHTS.dex;
+  const weights = DEFAULT_WEIGHTS[protocolType];
   
   const normalizedMetrics: Record<string, number> = {};
   
@@ -93,8 +93,8 @@ export function calculateCohortSPTScore(
   
   let score = 0;
   for (const metric in weights) {
-    const key = metric as keyof typeof weights.dex;
-    if (normalizedMetrics[metric] !== undefined) {
+    const key = metric as keyof Metrics;
+    if (normalizedMetrics[metric] !== undefined && weights[key] !== undefined) {
       score += weights[key] * normalizedMetrics[metric];
     }
   }
@@ -110,7 +110,7 @@ export function calculateSelfSPTScore(
   selfHistoricalMetrics: HistoricalMetrics,
   protocolType: ProtocolType
 ): number {
-  const weights = DEFAULT_WEIGHTS[protocolType] || DEFAULT_WEIGHTS.dex;
+  const weights = DEFAULT_WEIGHTS[protocolType];
   
   const normalizedMetrics: Record<string, number> = {};
   
@@ -128,8 +128,8 @@ export function calculateSelfSPTScore(
   
   let score = 0;
   for (const metric in weights) {
-    const key = metric as keyof typeof weights.dex;
-    if (normalizedMetrics[metric] !== undefined) {
+    const key = metric as keyof Metrics;
+    if (normalizedMetrics[metric] !== undefined && weights[key] !== undefined) {
       score += weights[key] * normalizedMetrics[metric];
     }
   }
