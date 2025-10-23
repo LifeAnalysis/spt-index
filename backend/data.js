@@ -252,17 +252,31 @@ function calculateScoreChange(currentScore, historicalScore) {
 }
 
 export async function getSPTIndex(protocols) {
-  const metricsWithSlugs = await Promise.all(
-    protocols.map(async (slug) => {
-      try {
-        const data = await getProtocolData(slug);
-        return { ...data, slug }; // Add slug to the data
-      } catch (err) {
-        console.error(`Failed to get data for ${slug}:`, err.message);
-        return null;
-      }
-    })
-  );
+  // Fetch in batches of 3 to avoid memory exhaustion on Railway's 512MB limit
+  const metricsWithSlugs = [];
+  const batchSize = 3;
+  
+  for (let i = 0; i < protocols.length; i += batchSize) {
+    const batch = protocols.slice(i, i + batchSize);
+    console.log(`📦 Fetching batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(protocols.length / batchSize)}: ${batch.join(', ')}`);
+    
+    const batchResults = await Promise.all(
+      batch.map(async (slug) => {
+        try {
+          const data = await getProtocolData(slug);
+          return { ...data, slug }; // Add slug to the data
+        } catch (err) {
+          console.error(`Failed to get data for ${slug}:`, err.message);
+          return null;
+        }
+      })
+    );
+    
+    metricsWithSlugs.push(...batchResults);
+    
+    // Allow garbage collection between batches
+    if (global.gc) global.gc();
+  }
   
   const validMetrics = metricsWithSlugs.filter(m => m !== null);
   
