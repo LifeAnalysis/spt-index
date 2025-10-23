@@ -85,15 +85,17 @@ export default function Home() {
       setError(null);
       
       let res;
+      const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
+      
       if (forceRefresh) {
         setForceRefreshing(true);
-        console.log('🔄 Force refreshing data...');
-        res = await fetch('/api/spt', {
+        console.log('🔄 Force refreshing data from Railway backend...');
+        res = await fetch(RAILWAY_API, {
           method: 'POST',
         });
       } else {
-        console.log('📡 Fetching from Next.js API route: /api/spt');
-        res = await fetch('/api/spt');
+        console.log('📡 Fetching from Railway backend:', RAILWAY_API);
+        res = await fetch(RAILWAY_API);
       }
       
       console.log('📊 Response status:', res.status, res.ok);
