@@ -73,30 +73,19 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [forceRefreshing, setForceRefreshing] = useState(false);
   const [sortColumn, setSortColumn] = useState<SortColumn>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const fetchData = async (forceRefresh = false) => {
+  const fetchData = async () => {
     try {
-      console.log('🔍 Fetching data...', { forceRefresh });
+      console.log('🔍 Fetching data from Railway backend...');
       setLoading(true);
       setError(null);
       
-      let res;
       const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
-      
-      if (forceRefresh) {
-        setForceRefreshing(true);
-        console.log('🔄 Force refreshing data from Railway backend...');
-        res = await fetch(RAILWAY_API, {
-          method: 'POST',
-        });
-      } else {
-        console.log('📡 Fetching from Railway backend:', RAILWAY_API);
-        res = await fetch(RAILWAY_API);
-      }
+      console.log('📡 Fetching from:', RAILWAY_API);
+      const res = await fetch(RAILWAY_API);
       
       console.log('📊 Response status:', res.status, res.ok);
       if (!res.ok) throw new Error('Failed to fetch data');
@@ -126,7 +115,6 @@ export default function Home() {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
       setLoading(false);
-      setForceRefreshing(false);
     }
   };
 
@@ -613,28 +601,16 @@ export default function Home() {
                   Updated: {lastUpdated.toLocaleTimeString()}
                 </div>
               )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    fetchData(false);
-                    setMobileMenuOpen(false);
-                  }}
-                  disabled={loading}
-                  className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-caption font-medium transition-colors disabled:opacity-50"
-                >
-                  {loading && !forceRefreshing ? 'Loading...' : 'Refresh'}
-                </button>
-                <button
-                  onClick={() => {
-                    fetchData(true);
-                    setMobileMenuOpen(false);
-                  }}
-                  disabled={loading}
-                  className="flex-1 px-3 py-2 bg-gradient-to-r from-[#49997E] to-[#5eb896] hover:from-[#3d8268] hover:to-[#49997E] text-white rounded-lg text-caption font-medium transition-all disabled:opacity-50 shadow-sm"
-                >
-                  {forceRefreshing ? 'Loading...' : 'Force'}
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  fetchData();
+                  setMobileMenuOpen(false);
+                }}
+                disabled={loading}
+                className="w-full px-3 py-2 bg-gradient-to-r from-[#49997E] to-[#5eb896] hover:from-[#3d8268] hover:to-[#49997E] text-white rounded-lg text-caption font-medium transition-all disabled:opacity-50 shadow-sm"
+              >
+                {loading ? 'Loading...' : 'Refresh Data'}
+              </button>
             </div>
           )}
 
@@ -660,22 +636,13 @@ export default function Home() {
                   {lastUpdated.toLocaleString()}
                 </span>
               )}
-              <div className="flex gap-2">
-                <button
-                  onClick={() => fetchData(false)}
-                  disabled={loading}
-                  className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-caption font-medium transition-colors disabled:opacity-50"
-                >
-                  {loading && !forceRefreshing ? '...' : 'Refresh'}
-                </button>
-                <button
-                  onClick={() => fetchData(true)}
-                  disabled={loading}
-                  className="px-3 py-1.5 bg-gradient-to-r from-[#49997E] to-[#5eb896] hover:from-[#3d8268] hover:to-[#49997E] text-white rounded-lg text-caption font-medium transition-all disabled:opacity-50 shadow-sm"
-                >
-                  {forceRefreshing ? '...' : 'Force'}
-                </button>
-              </div>
+              <button
+                onClick={() => fetchData()}
+                disabled={loading}
+                className="px-4 py-2 bg-gradient-to-r from-[#49997E] to-[#5eb896] hover:from-[#3d8268] hover:to-[#49997E] text-white rounded-lg text-caption font-medium transition-all disabled:opacity-50 shadow-sm"
+              >
+                {loading ? 'Loading...' : 'Refresh Data'}
+              </button>
             </div>
           </div>
         </div>
