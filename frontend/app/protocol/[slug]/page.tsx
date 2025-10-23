@@ -72,7 +72,8 @@ export default function ProtocolDetailPage() {
         headers['If-None-Match'] = etag;
       }
       
-      const res = await fetch(`http://localhost:3000/api/protocol/${slug}`, { headers });
+      const RAILWAY_API = 'https://spt-index-production.up.railway.app';
+      const res = await fetch(`${RAILWAY_API}/api/protocol/${slug}`, { headers });
       
       // If 304 Not Modified, data hasn't changed
       if (res.status === 304) {
