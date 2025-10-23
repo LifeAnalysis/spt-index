@@ -1,20 +1,25 @@
 import { NextResponse } from 'next/server';
+import { getSPTIndex } from '@/lib/data';
 
-const BACKEND_URL = process.env.BACKEND_URL || 'http://localhost:3000';
+// List of protocols to fetch
+const PROTOCOLS = [
+  // DEXs
+  'uniswap', 'curve-dex', 'pancakeswap', 'sushiswap', 'balancer',
+  'raydium', 'orca', 'trader-joe', 'quickswap', 'aerodrome',
+  // Lending
+  'aave', 'compound-v3', 'makerdao', 'morpho', 'spark',
+  'justlend', 'venus', 'radiant', 'benqi'
+];
+
+export const revalidate = 86400; // Revalidate every 24 hours
 
 export async function GET() {
   try {
-    // Fetch from backend with Next.js caching
-    const res = await fetch(`${BACKEND_URL}/api/spt`, {
-      // Revalidate every 24 hours (86400 seconds)
-      next: { revalidate: 86400 }
-    });
+    console.log('🔄 Fetching SPT Index data from DeFiLlama...');
     
-    if (!res.ok) {
-      throw new Error(`Backend API returned ${res.status}`);
-    }
+    const data = await getSPTIndex(PROTOCOLS);
     
-    const data = await res.json();
+    console.log(`✅ Successfully fetched: ${data.dex.length} DEXs, ${data.lending.length} Lending protocols`);
     
     return NextResponse.json(data, {
       headers: {
@@ -22,7 +27,7 @@ export async function GET() {
       },
     });
   } catch (error) {
-    console.error('Error fetching SPT data:', error);
+    console.error('❌ Error fetching SPT data:', error);
     return NextResponse.json(
       { error: 'Failed to fetch protocol data' },
       { status: 500 }
@@ -32,21 +37,16 @@ export async function GET() {
 
 export async function POST() {
   try {
-    // Force refresh - bypass cache
-    const res = await fetch(`${BACKEND_URL}/api/spt/refresh`, {
-      method: 'POST',
-      cache: 'no-store'
-    });
+    console.log('🔄 Force refresh requested - fetching fresh data...');
     
-    if (!res.ok) {
-      throw new Error(`Backend API returned ${res.status}`);
-    }
+    // Force fresh data by not using cache
+    const data = await getSPTIndex(PROTOCOLS);
     
-    const data = await res.json();
+    console.log(`✅ Successfully refreshed: ${data.dex.length} DEXs, ${data.lending.length} Lending protocols`);
     
     return NextResponse.json(data);
   } catch (error) {
-    console.error('Error forcing refresh:', error);
+    console.error('❌ Error forcing refresh:', error);
     return NextResponse.json(
       { error: 'Failed to refresh protocol data' },
       { status: 500 }
