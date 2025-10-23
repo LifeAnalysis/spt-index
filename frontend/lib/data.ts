@@ -198,18 +198,40 @@ function calculateScoreChange(currentScore: number, historicalScore: number | nu
   return change;
 }
 
+/**
+ * Fetch protocols in batches to avoid timeouts
+ */
+async function fetchInBatches<T>(
+  items: string[],
+  batchSize: number,
+  fetchFn: (item: string) => Promise<T | null>
+): Promise<(T | null)[]> {
+  const results: (T | null)[] = [];
+  
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    console.log(`📦 Fetching batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(items.length / batchSize)}: ${batch.join(', ')}`);
+    
+    const batchResults = await Promise.all(
+      batch.map(async (slug) => {
+        try {
+          return await fetchFn(slug);
+        } catch (err) {
+          console.error(`Failed to get data for ${slug}:`, err);
+          return null;
+        }
+      })
+    );
+    
+    results.push(...batchResults);
+  }
+  
+  return results;
+}
+
 export async function getSPTIndex(protocols: string[]) {
-  const metricsWithSlugs = await Promise.all(
-    protocols.map(async (slug) => {
-      try {
-        const data = await getProtocolData(slug);
-        return data;
-      } catch (err) {
-        console.error(`Failed to get data for ${slug}:`, err);
-        return null;
-      }
-    })
-  );
+  // Fetch in batches of 6 protocols at a time to avoid timeout
+  const metricsWithSlugs = await fetchInBatches(protocols, 6, getProtocolData);
   
   const validMetrics = metricsWithSlugs.filter((m): m is ProtocolData => m !== null);
   
