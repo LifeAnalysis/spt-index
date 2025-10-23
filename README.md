@@ -262,7 +262,7 @@ momentum = Σ(weight × sigmoid(z_self))
 
 ## 🚀 Deployment
 
-**🎉 Live Application:** https://frontend-jf2vttstm-lifeanalysis-projects.vercel.app
+**🎉 Live Application:** https://frontend-flxr6bm3i-lifeanalysis-projects.vercel.app
 
 **⚠️ Note:** Password protection may be enabled. To disable:
 1. Go to https://vercel.com/lifeanalysis-projects/frontend/settings/deployment-protection
@@ -271,17 +271,37 @@ momentum = Σ(weight × sigmoid(z_self))
 
 **Fully deployed on Vercel** as serverless functions - no separate backend needed!
 
-### Current Configuration (Free Tier)
-- **Protocols Tracked:** 10 (top by TVL)
-  - DEX: Uniswap, Curve, PancakeSwap, Raydium
-  - Lending: Aave, Morpho, Spark, Compound V3, MakerDAO, JustLend
-- **Batched Fetching:** 3 protocols at a time (4 batches)
-- **90-Day Historical Data:** ✅ Full analysis window
-- **Execution Time:** ~6-8 seconds (under 10s free tier limit)
+### Current Configuration (Free Tier - Optimized)
+- **Protocols Tracked:** 6 (top by TVL)
+  - **DEX:** Uniswap, Curve, PancakeSwap
+  - **Lending:** Aave, Spark, Morpho
+- **Historical Window:** 30 days (optimal for Z-score analysis)
+- **Batched Fetching:** 3 protocols at a time (2 batches)
+- **Execution Time:** ~4-6 seconds (comfortably under 10s limit)
 - **Edge Caching:** 24-hour cache with stale-while-revalidate
+- **All Features:** ✅ Dual-score system, rankings, charts
 
-### Upgrade to Pro for All 19 Protocols
-To track all 19 protocols, upgrade to Vercel Pro ($20/month) which allows 60s `maxDuration`
+### Why These Limitations?
+
+Vercel Free Tier has a **10-second serverless function timeout**. Fetching DeFiLlama historical data for multiple protocols is resource-intensive:
+- Each protocol requires 3 API calls (TVL, fees, volume)
+- Historical data processing takes time
+- 6 protocols × 30 days = optimal balance
+
+### Upgrade Options
+
+**Option 1: Vercel Pro ($20/month)**
+- 60-second `maxDuration`
+- Track all 19 protocols
+- 90-day historical window
+- Just uncomment protocols in code
+
+**Option 2: Deploy Backend Separately (FREE)**
+- Use the `/backend` Express server
+- Deploy to Railway/Render free tier
+- No timeout limits
+- Track all 19 protocols with 90 days
+- See [DEPLOYMENT.md](DEPLOYMENT.md) for instructions
 
 See **[DEPLOYMENT_COMPLETE.md](DEPLOYMENT_COMPLETE.md)** for:
 - Complete deployment architecture
