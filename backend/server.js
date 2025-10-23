@@ -8,7 +8,7 @@ import { exportToCSV, exportSummaryCSV } from './csvExport.js';
 import Cache from './cache.js';
 
 const app = express();
-const PORT = 3000;
+const PORT = process.env.PORT || 3000; // Use Railway's PORT or default to 3000
 const CACHE_TTL_MINUTES = 1440; // Cache for 24 hours (1440 minutes)
 const PROTOCOL_CACHE_TTL_MINUTES = 1440; // Cache for 24 hours
 
