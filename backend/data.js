@@ -59,7 +59,7 @@ const PROTOCOL_SLUGS_MAP = {
  * Extract historical daily values from time-series data
  * Returns last N days of data
  */
-function extractHistoricalValues(timeSeriesData, days = 90) {
+function extractHistoricalValues(timeSeriesData, days = 30) {
   if (!timeSeriesData || !Array.isArray(timeSeriesData)) return [];
   
   const now = Math.floor(Date.now() / 1000);
@@ -91,11 +91,11 @@ function getTvlAtTimestamp(chainTvls, targetTimestamp) {
 }
 
 /**
- * Build historical arrays for all metrics over 90 days
+ * Build historical arrays for all metrics over 30 days (optimized for Railway free tier)
  * Properly aggregates TVL across all chains
  */
 export function buildHistoricalMetrics(tvlData, feesData, volumeData) {
-  const cutoff = Math.floor(Date.now() / 1000) - (90 * 86400);
+  const cutoff = Math.floor(Date.now() / 1000) - (30 * 86400);
   const dateMap = new Map();
   
   // Aggregate TVL across ALL chains by date
