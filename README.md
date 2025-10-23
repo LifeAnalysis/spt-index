@@ -112,20 +112,30 @@ curl -X POST http://localhost:3000/api/spt/refresh
 
 ### Tech Stack
 
-**Backend:**
-- Node.js with ESM modules
-- Express for API server
-- Undici for HTTP requests
-- In-memory caching system
-
-**Frontend:**
-- Next.js 16 with App Router
+**Full Stack (Vercel):**
+- Next.js 16 with App Router & Serverless Functions
 - React 19 with TypeScript
 - TailwindCSS for styling
 - Recharts for data visualization
 
+**Backend Logic (Serverless):**
+- Next.js API Routes (Edge Functions)
+- Z-score normalization engine
+- Native Fetch API
+- Vercel Edge Caching (24h revalidation)
+
 **Data Source:**
-- DefiLlama API (no key required)
+- DeFiLlama API (no key required)
+
+### Deployment Architecture
+
+```
+User Browser → Vercel Edge Network → Next.js API Route → DeFiLlama API
+                      ↓
+              [24h Edge Cache]
+                      ↓
+              [SessionStorage Cache]
+```
 
 ### Project Structure
 
@@ -252,12 +262,14 @@ momentum = Σ(weight × sigmoid(z_self))
 
 ## 🚀 Deployment
 
-**Live Frontend:** https://frontend-qqlpnk096-lifeanalysis-projects.vercel.app
+**🎉 Live Application:** https://frontend-rao8z14ks-lifeanalysis-projects.vercel.app
 
-See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment instructions including:
-- Deploying backend to Railway/Render/Heroku
-- Connecting frontend to backend
-- Environment variable configuration
+**Fully deployed on Vercel** as serverless functions - no separate backend needed!
+
+See **[DEPLOYMENT_COMPLETE.md](DEPLOYMENT_COMPLETE.md)** for:
+- Complete deployment architecture
+- Performance metrics
+- Maintenance guide
 - Custom domain setup
 
 ## 📖 Documentation
