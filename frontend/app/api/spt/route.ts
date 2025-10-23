@@ -2,17 +2,18 @@ import { NextResponse } from 'next/server';
 import { getSPTIndex } from '@/lib/data';
 
 // List of protocols to fetch
-// Limited to top 10 to stay under Vercel free tier 10s timeout
+// Limited to top 6 to stay under Vercel free tier 10s timeout
+// Using 30-day historical window for faster fetching
 const PROTOCOLS = [
-  // Top DEXs by TVL
-  'uniswap', 'curve-dex', 'pancakeswap', 'raydium',
-  // Top Lending by TVL
-  'aave', 'morpho', 'spark', 'compound-v3', 'makerdao', 'justlend'
+  // Top 3 DEXs by TVL
+  'uniswap', 'curve-dex', 'pancakeswap',
+  // Top 3 Lending by TVL  
+  'aave', 'spark', 'morpho'
 ];
 
-// Full list (for reference - requires Pro plan with longer timeout):
-// 'sushiswap', 'balancer', 'orca', 'trader-joe', 'quickswap', 'aerodrome',
-// 'venus', 'radiant', 'benqi'
+// Additional protocols (add these when you upgrade to Vercel Pro):
+// DEX: 'raydium', 'sushiswap', 'balancer', 'orca', 'trader-joe', 'quickswap', 'aerodrome'
+// Lending: 'compound-v3', 'makerdao', 'justlend', 'venus', 'radiant', 'benqi'
 
 export const revalidate = 86400; // Revalidate every 24 hours
 export const maxDuration = 60; // Maximum execution time: 60 seconds (requires Pro plan, free tier max is 10s)

@@ -77,10 +77,10 @@ function getTvlAtTimestamp(chainTvls: any, targetTimestamp: number): number {
 }
 
 /**
- * Build historical arrays for all metrics over 90 days
+ * Build historical arrays for all metrics over 30 days (optimized for Vercel free tier)
  */
 function buildHistoricalMetrics(tvlData: any, feesData: any, volumeData: any): HistoricalMetrics {
-  const cutoff = Math.floor(Date.now() / 1000) - (90 * 86400);
+  const cutoff = Math.floor(Date.now() / 1000) - (30 * 86400);
   const dateMap = new Map<number, number>();
   
   // Aggregate TVL across ALL chains by date
