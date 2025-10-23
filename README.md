@@ -250,8 +250,19 @@ momentum = Σ(weight × sigmoid(z_self))
 - **Arbitrum**: Radiant
 - **Avalanche**: BENQI
 
+## 🚀 Deployment
+
+**Live Frontend:** https://frontend-qqlpnk096-lifeanalysis-projects.vercel.app
+
+See **[DEPLOYMENT.md](DEPLOYMENT.md)** for complete deployment instructions including:
+- Deploying backend to Railway/Render/Heroku
+- Connecting frontend to backend
+- Environment variable configuration
+- Custom domain setup
+
 ## 📖 Documentation
 
+- **[Deployment Guide](DEPLOYMENT.md)** - Production deployment instructions
 - **[Product Specification](docs/product.md)** - Full product vision and requirements
 - **[Roadmap](docs/ROADMAP.md)** - Future enhancements and improvements
 - **[Changelog](docs/CHANGELOG.md)** - Complete implementation history
