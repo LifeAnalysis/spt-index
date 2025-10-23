@@ -231,3 +231,4 @@ The protocol detail page is now **fully mobile-optimized** with:
 
 (Note: Frontend is running on port 3002, not 3001, because port 3000 was already in use)
 
+
