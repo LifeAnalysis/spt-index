@@ -262,9 +262,15 @@ momentum = Σ(weight × sigmoid(z_self))
 
 ## 🚀 Deployment
 
-**🎉 Live Application:** https://frontend-rao8z14ks-lifeanalysis-projects.vercel.app
+**🎉 Live Application:** https://frontend-c6q9eb71h-lifeanalysis-projects.vercel.app
 
 **Fully deployed on Vercel** as serverless functions - no separate backend needed!
+
+### Architecture Highlights
+- **Batched Data Fetching:** Protocols fetched in groups of 6 to avoid timeouts
+- **90-Day Historical Data:** Full analysis window maintained
+- **Serverless Functions:** Auto-scales on demand
+- **Edge Caching:** 24-hour cache with stale-while-revalidate
 
 See **[DEPLOYMENT_COMPLETE.md](DEPLOYMENT_COMPLETE.md)** for:
 - Complete deployment architecture
