@@ -8,7 +8,7 @@ import { exportToCSV, exportSummaryCSV } from './csvExport.js';
 import Cache from './cache.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000; // Use Railway's PORT or default to 3000
+const PORT = process.env.PORT || 3000; // Use Railway's PORT env variable
 const CACHE_TTL_MINUTES = 1440; // Cache for 24 hours (1440 minutes)
 const PROTOCOL_CACHE_TTL_MINUTES = 1440; // Cache for 24 hours
 
@@ -317,9 +317,9 @@ cron.schedule('0 2 * * *', () => {
   refreshSPTData();
 });
 
-app.listen(PORT, async () => {
-  console.log(`SPT Backend API running on http://localhost:${PORT}`);
-  console.log(`Endpoint: http://localhost:${PORT}/api/spt`);
+app.listen(PORT, '0.0.0.0', async () => {
+  console.log(`SPT Backend API running on http://0.0.0.0:${PORT}`);
+  console.log(`Endpoint: http://0.0.0.0:${PORT}/api/spt`);
   console.log(`Cache TTL: ${CACHE_TTL_MINUTES} minutes (24 hours)`);
   console.log('🔄 Auto-refresh: Daily at 2:00 AM');
   
