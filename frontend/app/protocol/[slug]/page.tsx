@@ -325,7 +325,7 @@ export default function ProtocolDetailPage() {
             <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
               <h1 className="text-lg sm:text-3xl lg:text-4xl font-bold text-gray-900 truncate">{data.name}</h1>
               <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-white/80 text-gray-700 rounded text-[10px] sm:text-sm font-medium border border-gray-200 whitespace-nowrap flex-shrink-0">
-                {data.type === 'dex' ? '🔄 DEX' : '💰 Lending'}
+                {data.type === 'dex' ? '🔄 DEX' : (data.type === 'cdp' ? '🏦 CDP' : '💰 Lending')}
               </span>
             </div>
 
@@ -459,9 +459,9 @@ export default function ProtocolDetailPage() {
         </section>
 
         {/* Protocol-Specific Metrics */}
-        {data.type === 'lending' && data.current.lendingMetrics && (
+        {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
           <section className="mb-3 sm:mb-6">
-            <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">Lending Metrics</h3>
+            <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">{data.type === 'cdp' ? 'CDP Metrics' : 'Lending Metrics'}</h3>
             <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
               <div className="p-4 sm:p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
@@ -801,7 +801,7 @@ export default function ProtocolDetailPage() {
               <div className="mb-4">
                 <div className="flex items-center gap-2 mb-2">
                   <h4 className="text-body-lg font-bold text-gray-900">
-                    {data.type === 'dex' ? 'DEX' : 'Lending'} Weights
+                    {data.type === 'dex' ? 'DEX' : (data.type === 'cdp' ? 'CDP' : 'Lending')} Weights
                   </h4>
                   <InfoTooltip 
                     content="protocol-specific weights for spt score calculation. dex and lending protocols use different metric priorities."
@@ -831,6 +831,25 @@ export default function ProtocolDetailPage() {
                   <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
                     <span className="text-body-sm font-medium text-gray-700">📈 Fee Growth</span>
                     <span className="text-score-md text-amber-600">10%</span>
+                  </div>
+                </div>
+              ) : data.type === 'cdp' ? (
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">🏦 Minted Stablecoin</span>
+                    <span className="text-score-md text-blue-600">40%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💎 Blue-chip Collateral</span>
+                    <span className="text-score-md text-purple-600">30%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">⚡ Utilization Rate</span>
+                    <span className="text-score-md text-amber-600">20%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💵 Stability Fees</span>
+                    <span className="text-score-md text-[#49997E]">10%</span>
                   </div>
                 </div>
               ) : (
@@ -863,6 +882,8 @@ export default function ProtocolDetailPage() {
                     <p className="text-[11px] leading-relaxed">
                       {data.type === 'dex' 
                         ? 'We prioritize trading volume (actual activity) and capital efficiency (volume/TVL ratio) over raw TVL. A DEX with $100M TVL facilitating $80M daily volume (0.8x efficiency) is more valuable than one with $1B TVL and $50M volume (0.05x efficiency).'
+                        : data.type === 'cdp'
+                        ? 'CDP protocols mint stablecoins against collateral. We prioritize minted debt (demand signal), blue-chip collateral quality (ETH, wBTC = lower risk), utilization (debt ceiling usage), and stability fee revenue (sustainability).'
                         : 'We moved away from TVL to focus on fundamentals: borrow volume drives revenue, vanilla assets (USDC, USDT, DAI, ETH, wBTC) represent real demand, and utilization rate measures capital efficiency. TVL obscures leverage and can be gamed.'
                       }
                     </p>

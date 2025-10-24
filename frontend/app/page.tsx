@@ -805,6 +805,13 @@ export default function Home() {
                 'Z-score normalized ranking: Borrow Volume 40%, Vanilla Assets 25%, Utilization 20%, Fees 15%',
                 '💰'
               )}
+              
+              {data.cdp && data.cdp.length > 0 && renderProtocolTable(
+                data.cdp,
+                'CDP Protocols (Stablecoins)',
+                'Z-score normalized ranking: Minted Stablecoin 40%, Blue-chip Collateral 30%, Utilization 20%, Fees 10%',
+                '🏦'
+              )}
             </section>
           </>
         )}
@@ -856,7 +863,7 @@ export default function Home() {
                     <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
                     <h5 className="font-bold text-gray-900 text-sm">Weighted Aggregation</h5>
                     <InfoTooltip 
-                      content="combines normalized metrics with protocol-specific weights. dex prioritizes trading volume + capital efficiency, lending prioritizes borrow volume + vanilla assets."
+                      content="combines normalized metrics with protocol-specific weights. dex prioritizes trading volume + capital efficiency, lending prioritizes borrow volume + vanilla assets, cdp prioritizes minted stablecoins + blue-chip collateral."
                       position="bottom"
                       maxWidth="600px"
                     />
@@ -872,6 +879,10 @@ export default function Home() {
                     <div className="bg-emerald-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">Lending</div>
                       <div className="text-gray-600">Borrow:40% Vanilla:25% Util:20% Fees:15%</div>
+                    </div>
+                    <div className="bg-purple-50 rounded px-2 py-1.5">
+                      <div className="font-semibold text-gray-700">CDP (Stablecoins)</div>
+                      <div className="text-gray-600">Minted:40% Collateral:30% Util:20% Fees:10%</div>
                     </div>
                   </div>
                 </div>
