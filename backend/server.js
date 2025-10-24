@@ -23,9 +23,7 @@ const PROTOCOLS = [
   'pancakeswap',
   // DEXs - Solana
   'raydium',
-  'orca',
   // DEXs - Other L2s/Chains
-  'trader-joe',
   'quickswap',
   'aerodrome',
   // Lending - Ethereum
@@ -170,9 +168,7 @@ app.post('/api/spt/refresh', async (req, res) => {
       'pancakeswap',
       // DEXs - Solana
       'raydium',
-      'orca',
       // DEXs - Other L2s/Chains
-      'trader-joe',
       'quickswap',
       'aerodrome',
       // Lending - Ethereum

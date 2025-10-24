@@ -74,20 +74,31 @@ function correlation(x, y) {
 
 /**
  * Default weights for different protocol types
- * These serve as base weights before adaptive adjustment
+ * Updated based on fundamental analysis of what drives protocol success
+ * 
+ * DEX Principles:
+ * - Volume matters more than TVL (actual activity > idle capital)
+ * - Capital efficiency (Volume/TVL) is key metric
+ * - Fee revenue shows sustainability
+ * 
+ * Lending Principles:
+ * - Borrow volume is the revenue driver (not TVL)
+ * - Vanilla assets (USDC, ETH, wBTC) are the bottleneck
+ * - Utilization rate shows capital efficiency
+ * - Fee revenue shows sustainability
  */
 const DEFAULT_WEIGHTS = {
   dex: {
-    fees: 0.35,      // 35% - Trading fees importance
-    volume: 0.30,    // 30% - Trading activity
-    tvl: 0.25,       // 25% - Liquidity depth
-    activity: 0.10   // 10% - On-chain activity
+    volume: 0.40,           // 40% - Trading volume (actual activity)
+    capitalEfficiency: 0.30, // 30% - Volume/TVL ratio (capital efficiency)
+    fees: 0.20,             // 20% - Fee revenue (sustainability)
+    feeGrowth: 0.10         // 10% - Fee growth momentum (24h change)
   },
   lending: {
-    fees: 0.40,      // 40% - Interest/fees are primary
-    tvl: 0.35,       // 35% - Capital available for lending
-    volume: 0.15,    // 15% - Borrow/supply activity
-    activity: 0.10   // 10% - Protocol usage
+    borrowVolume: 0.40,     // 40% - Borrow volume (revenue driver)
+    vanillaSupply: 0.25,    // 25% - Vanilla asset supply (growth bottleneck)
+    utilization: 0.20,      // 20% - Utilization rate (capital efficiency)
+    fees: 0.15              // 15% - Fee revenue (sustainability)
   }
 };
 
@@ -140,8 +151,8 @@ function adaptiveWeights(baseWeights, metricCorrelations) {
  * Compares protocol metrics against the entire cohort (all DEXes or all Lending protocols)
  * This is the PRIMARY score for trading and perpetuals
  * 
- * @param {Object} currentMetrics - Current values { fees, volume, tvl, activity }
- * @param {Object} cohortHistoricalMetrics - Cohort-wide historical arrays { fees: [], volume: [], tvl: [], activity: [] }
+ * @param {Object} currentMetrics - Current values { fees, volume, tvl, feeGrowth }
+ * @param {Object} cohortHistoricalMetrics - Cohort-wide historical arrays { fees: [], volume: [], tvl: [], feeGrowth: [] }
  * @param {string} protocolType - 'dex' or 'lending'
  * @param {Object} correlations - Optional correlations for adaptive weighting
  * @returns {number} SPT score in [0, 1] range
@@ -186,8 +197,8 @@ export function calculateCohortSPTScore(currentMetrics, cohortHistoricalMetrics,
  * Compares protocol metrics against its OWN 90-day historical baseline
  * This is the SECONDARY score for trend analysis
  * 
- * @param {Object} currentMetrics - Current values { fees, volume, tvl, activity }
- * @param {Object} selfHistoricalMetrics - Protocol's own historical arrays { fees: [], volume: [], tvl: [], activity: [] }
+ * @param {Object} currentMetrics - Current values { fees, volume, tvl, feeGrowth }
+ * @param {Object} selfHistoricalMetrics - Protocol's own historical arrays { fees: [], volume: [], tvl: [], feeGrowth: [] }
  * @param {string} protocolType - 'dex' or 'lending'
  * @param {Object} correlations - Optional correlations for adaptive weighting
  * @returns {number} Momentum score in [0, 1] range

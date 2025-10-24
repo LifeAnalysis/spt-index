@@ -4,6 +4,20 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InfoTooltip from './components/InfoTooltip';
 
+interface LendingMetrics {
+  borrowVolume: number;
+  supplyVolume: number;
+  utilization: number;
+  vanillaSupply: number;
+  vanillaUtilization: number;
+  vanillaSupplyRatio: number;
+}
+
+interface DEXMetrics {
+  capitalEfficiency: number;
+  volumeToTVL: number;
+}
+
 interface Protocol {
   protocol: string;
   slug: string;
@@ -21,6 +35,8 @@ interface Protocol {
   change24h: number | null;
   change7d: number | null;
   change30d: number | null;
+  lendingMetrics?: LendingMetrics;
+  dexMetrics?: DEXMetrics;
 }
 
 interface SPTData {
@@ -45,9 +61,7 @@ const PROTOCOL_SLUGS: Record<string, string> = {
   'PancakeSwap': 'pancakeswap',
   // DEXs - Solana
   'Raydium': 'raydium',
-  'Orca': 'orca',
   // DEXs - Other L2s/Chains
-  'Trader Joe': 'trader-joe',
   'QuickSwap': 'quickswap',
   'Aerodrome': 'aerodrome',
   // Lending - Ethereum
@@ -766,14 +780,14 @@ export default function Home() {
               {renderProtocolTable(
                 data.dex,
                 'DEX Protocols',
-                'Z-score normalized ranking: Fees 35%, Volume 30%, TVL 25%, Activity 10%',
+                'Z-score normalized ranking: Fees 35%, Volume 30%, TVL 25%, Fee Growth 10%',
                 '🔄'
               )}
               
               {renderProtocolTable(
                 data.lending,
                 'Lending Protocols',
-                'Z-score normalized ranking: Fees 40%, TVL 35%, Volume 15%, Activity 10%',
+                'Z-score normalized ranking: Fees 40%, TVL 35%, Volume 15%, Fee Growth 10%',
                 '💰'
               )}
             </section>
@@ -838,11 +852,11 @@ export default function Home() {
                   <div className="space-y-1.5 text-xs">
                     <div className="bg-blue-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">DEX</div>
-                      <div className="text-gray-600">F:35% V:30% T:25% A:10%</div>
+                      <div className="text-gray-600">F:35% V:30% T:25% FG:10%</div>
                     </div>
                     <div className="bg-emerald-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">Lending</div>
-                      <div className="text-gray-600">F:40% T:35% V:15% A:10%</div>
+                      <div className="text-gray-600">F:40% T:35% V:15% FG:10%</div>
                     </div>
                   </div>
                 </div>

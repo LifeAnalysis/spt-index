@@ -1,5 +1,6 @@
 import { fetch } from 'undici';
 import { calculateCohortSPTScore, calculateSelfSPTScore, calculateMomentumTrend, normalizeScores } from './scoring.js';
+import { getLendingMetrics, getDEXMetrics } from './lendingMetrics.js';
 
 // Protocol categories with their types
 const PROTOCOL_TYPES = {
@@ -12,9 +13,7 @@ const PROTOCOL_TYPES = {
   'pancakeswap': 'dex',
   // DEXs - Solana
   'raydium': 'dex',
-  'orca': 'dex',
   // DEXs - Other L2s/Chains
-  'trader-joe': 'dex',
   'quickswap': 'dex',
   'aerodrome': 'dex',
   // Lending - Ethereum
@@ -39,8 +38,6 @@ const PROTOCOL_SLUGS_MAP = {
   'sushiswap': 'sushiswap',
   'balancer': 'balancer',
   'raydium': 'raydium',
-  'orca': 'orca',
-  'trader-joe': 'trader-joe',
   'quickswap': 'quickswap',
   'aerodrome': 'aerodrome',
   // Lending
@@ -54,6 +51,7 @@ const PROTOCOL_SLUGS_MAP = {
   'radiant': 'radiant',
   'benqi': 'benqi'
 };
+
 
 /**
  * Extract historical daily values from time-series data
@@ -139,7 +137,7 @@ export function buildHistoricalMetrics(tvlData, feesData, volumeData) {
     tvl: tvlHistory,
     fees: feesHistory,
     volume: volumeHistory,
-    activity: [] // Could add transaction count here
+    feeGrowth: [] // Fee growth (change_1d) will be calculated from current data
   };
 }
 
@@ -151,7 +149,8 @@ async function getProtocolData(protocol) {
       fetch(`https://api.llama.fi/summary/fees/${protocol}`).then(r => r.json()).catch(() => ({ 
         total24h: 0, 
         total7d: 0, 
-        total30d: 0 
+        total30d: 0,
+        change_1d: 0
       })),
       fetch(`https://api.llama.fi/summary/dexs/${protocol}`).then(r => r.json()).catch(() => ({ 
         total24h: 0, 
@@ -181,15 +180,59 @@ async function getProtocolData(protocol) {
     const tvl7dAgo = getTvlAtTimestamp(tvlData.chainTvls, now - 604800);
     const tvl30dAgo = getTvlAtTimestamp(tvlData.chainTvls, now - 2592000);
 
-    // Current metrics
-    const currentMetrics = {
-      fees: fees.total24h || 0,
-      volume: volume.total24h || 0,
-      tvl: currentTvl,
-      activity: 0 // Could add tx count here
-    };
+    // Extract fee growth (change_1d) from fees API
+    const feeGrowth = fees.change_1d ? parseFloat(fees.change_1d) : 0;
 
-    console.log(`${tvlData.name} (${protocolType}): TVL=$${currentTvl.toLocaleString()}, Fees=$${currentMetrics.fees.toLocaleString()}, Volume=$${currentMetrics.volume.toLocaleString()}, History: ${historicalMetrics.tvl.length}d`);
+    // Fetch protocol-type specific metrics
+    let currentMetrics;
+    let lendingMetrics = null;
+    
+    if (protocolType === 'lending') {
+      // Fetch lending-specific metrics (borrow volume, utilization, vanilla assets)
+      lendingMetrics = await getLendingMetrics(protocol);
+      
+      if (lendingMetrics) {
+        currentMetrics = {
+          borrowVolume: lendingMetrics.totalBorrowUsd,
+          vanillaSupply: lendingMetrics.vanillaSupplyUsd,
+          utilization: lendingMetrics.utilizationRate / 100, // Convert to decimal
+          fees: fees.total24h || 0,
+          // Legacy metrics for backwards compatibility
+          volume: lendingMetrics.totalBorrowUsd,
+          tvl: currentTvl,
+          feeGrowth: feeGrowth
+        };
+        
+        console.log(`${tvlData.name} (lending): Borrow=$${lendingMetrics.totalBorrowUsd.toLocaleString()}, Vanilla=$${lendingMetrics.vanillaSupplyUsd.toLocaleString()}, Utilization=${lendingMetrics.utilizationRate.toFixed(1)}%, Fees=$${currentMetrics.fees.toLocaleString()}`);
+      } else {
+        // Fallback if lending metrics unavailable
+        currentMetrics = {
+          borrowVolume: 0,
+          vanillaSupply: 0,
+          utilization: 0,
+          fees: fees.total24h || 0,
+          volume: 0,
+          tvl: currentTvl,
+          feeGrowth: feeGrowth
+        };
+        console.log(`${tvlData.name} (lending): No borrow data available, using fallback metrics`);
+      }
+    } else {
+      // DEX metrics - calculate capital efficiency (Volume/TVL ratio)
+      const volumeAmount = volume.total24h || 0;
+      const capitalEfficiency = currentTvl > 0 ? volumeAmount / currentTvl : 0;
+      
+      currentMetrics = {
+        volume: volumeAmount,
+        capitalEfficiency: capitalEfficiency,
+        fees: fees.total24h || 0,
+        feeGrowth: feeGrowth,
+        // Legacy metrics for backwards compatibility
+        tvl: currentTvl
+      };
+      
+      console.log(`${tvlData.name} (dex): Volume=$${volumeAmount.toLocaleString()}, TVL=$${currentTvl.toLocaleString()}, Cap.Eff=${capitalEfficiency.toFixed(4)}, Fees=$${currentMetrics.fees.toLocaleString()}`);
+    }
 
     return {
       name: tvlData.name,
@@ -198,14 +241,15 @@ async function getProtocolData(protocol) {
       type: protocolType,
       currentMetrics,
       historicalMetrics,
+      lendingMetrics, // Include full lending metrics for detail page
       tvl: currentTvl,
       tvl24hAgo,
       tvl7dAgo,
       tvl30dAgo,
-      fees: currentMetrics.fees,
+      fees: fees.total24h || 0,
       fees7d: fees.total7d || 0,
       fees30d: fees.total30d || 0,
-      volume: currentMetrics.volume,
+      volume: volume.total24h || 0,
       volume7d: volume.total7d || 0,
       volume30d: volume.total30d || 0
     };
@@ -292,7 +336,7 @@ export async function getSPTIndex(protocols) {
       fees: protocolList.flatMap(p => p.historicalMetrics.fees || []),
       volume: protocolList.flatMap(p => p.historicalMetrics.volume || []),
       tvl: protocolList.flatMap(p => p.historicalMetrics.tvl || []),
-      activity: protocolList.flatMap(p => p.historicalMetrics.activity || [])
+      feeGrowth: protocolList.flatMap(p => p.historicalMetrics.feeGrowth || [])
     };
   };
   
@@ -340,7 +384,7 @@ export async function getSPTIndex(protocols) {
         fees: p.currentMetrics.fees,
         volume: p.currentMetrics.volume,
         tvl: p.tvl24hAgo,
-        activity: 0
+        feeGrowth: 0 // Historical fee growth not available for past periods
       };
       score24hAgo = calculateCohortSPTScore(historicalMetrics24h, cohortMetrics, p.type);
       
@@ -348,7 +392,7 @@ export async function getSPTIndex(protocols) {
         fees: p.fees7d / 7,
         volume: p.volume7d / 7,
         tvl: p.tvl7dAgo,
-        activity: 0
+        feeGrowth: 0
       };
       score7dAgo = calculateCohortSPTScore(historicalMetrics7d, cohortMetrics, p.type);
       
@@ -356,7 +400,7 @@ export async function getSPTIndex(protocols) {
         fees: p.fees30d / 30,
         volume: p.volume30d / 30,
         tvl: p.tvl30dAgo,
-        activity: 0
+        feeGrowth: 0
       };
       score30dAgo = calculateCohortSPTScore(historicalMetrics30d, cohortMetrics, p.type);
     }
@@ -366,15 +410,18 @@ export async function getSPTIndex(protocols) {
     const change7d = calculateScoreChange(rawScore, score7dAgo);
     const change30d = calculateScoreChange(rawScore, score30dAgo);
 
-    return {
+    // Build display metrics based on protocol type
+    const displayMetrics = {
       protocol: p.name,
       logo: p.logo,
-      slug: p.slug, // Use the slug we attached earlier
+      slug: p.slug,
       category: p.category,
       type: p.type,
       tvl: p.tvl,
       fees: p.fees,
       volume: p.volume,
+      feeGrowth: p.currentMetrics.feeGrowth,
+      currentMetrics: p.currentMetrics,
       rawScore,
       momentumScore,
       momentum,
@@ -383,6 +430,28 @@ export async function getSPTIndex(protocols) {
       change30d,
       historicalDataPoints: p.historicalMetrics.tvl.length
     };
+    
+    // Add lending-specific metrics if available
+    if (p.type === 'lending' && p.lendingMetrics) {
+      displayMetrics.lendingMetrics = {
+        borrowVolume: p.lendingMetrics.totalBorrowUsd,
+        supplyVolume: p.lendingMetrics.totalSupplyUsd,
+        utilization: p.lendingMetrics.utilizationRate,
+        vanillaSupply: p.lendingMetrics.vanillaSupplyUsd,
+        vanillaUtilization: p.lendingMetrics.vanillaUtilization,
+        vanillaSupplyRatio: p.lendingMetrics.vanillaSupplyRatio
+      };
+    }
+    
+    // Add DEX-specific metrics
+    if (p.type === 'dex') {
+      displayMetrics.dexMetrics = {
+        capitalEfficiency: p.currentMetrics.capitalEfficiency,
+        volumeToTVL: p.currentMetrics.capitalEfficiency
+      };
+    }
+    
+    return displayMetrics;
   });
   
   // Use raw Z-score normalized scores directly (already in [0,1] range)

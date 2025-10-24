@@ -5,6 +5,28 @@ import { useParams, useRouter } from 'next/navigation';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine } from 'recharts';
 import InfoTooltip from '../../components/InfoTooltip';
 
+interface LendingMetrics {
+  borrowVolume: number;
+  supplyVolume: number;
+  utilization: number;
+  vanillaSupply: number;
+  vanillaUtilization: number;
+  vanillaSupplyRatio: number;
+  pools?: Array<{
+    symbol: string;
+    chain: string;
+    supplyUsd: number;
+    borrowUsd: number;
+    utilization: number;
+    isVanilla: boolean;
+  }>;
+}
+
+interface DEXMetrics {
+  capitalEfficiency: number;
+  volumeToTVL: number;
+}
+
 interface ProtocolDetail {
   name: string;
   slug: string;
@@ -25,6 +47,8 @@ interface ProtocolDetail {
     change24h: number | null;
     change7d: number | null;
     change30d: number | null;
+    lendingMetrics?: LendingMetrics;
+    dexMetrics?: DEXMetrics;
   };
   historicalMetrics?: {
     fees: number[];
@@ -408,6 +432,204 @@ export default function ProtocolDetailPage() {
             </div>
           </div>
         </section>
+
+        {/* Protocol-Specific Metrics */}
+        {data.type === 'lending' && data.current.lendingMetrics && (
+          <section className="mb-3 sm:mb-6">
+            <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">Lending Metrics</h3>
+            <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {/* Borrow Volume */}
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Borrow Volume
+                      <InfoTooltip 
+                        content="Total value of assets currently borrowed. This is the primary revenue driver for lending protocols."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.lendingMetrics.borrowVolume)}
+                    </div>
+                  </div>
+
+                  {/* Vanilla Assets */}
+                  <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Vanilla Assets
+                      <InfoTooltip 
+                        content="Supply of USDC, USDT, DAI, ETH, and wBTC. These are the growth bottleneck for lending protocols."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.lendingMetrics.vanillaSupply)}
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      {data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}% of supply
+                    </div>
+                  </div>
+
+                  {/* Utilization Rate */}
+                  <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Utilization
+                      <InfoTooltip 
+                        content="Percentage of supplied capital that is actively borrowed. Higher = better capital efficiency."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {data.current.lendingMetrics.utilization.toFixed(1)}%
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      Overall
+                    </div>
+                  </div>
+
+                  {/* Vanilla Utilization */}
+                  <div className="p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Vanilla Util.
+                      <InfoTooltip 
+                        content="Utilization rate specifically for vanilla assets (USDC, ETH, etc). Shows how efficiently core assets are being used."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {data.current.lendingMetrics.vanillaUtilization.toFixed(1)}%
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      Key assets
+                    </div>
+                  </div>
+
+                  {/* Supply Volume */}
+                  <div className="p-3 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Total Supply
+                      <InfoTooltip 
+                        content="Total value of all assets deposited by lenders across all pools."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.lendingMetrics.supplyVolume)}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Key Insight */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="text-[10px] sm:text-xs font-semibold text-blue-900 mb-1">💡 Key Insight</div>
+                  <div className="text-[10px] sm:text-xs text-blue-800">
+                    This protocol has <strong>{formatCurrency(data.current.lendingMetrics.borrowVolume)}</strong> in active borrows, 
+                    with <strong>{data.current.lendingMetrics.vanillaSupplyRatio.toFixed(0)}%</strong> of supply in high-demand vanilla assets. 
+                    {data.current.lendingMetrics.utilization > 75 ? 
+                      " High utilization indicates strong demand and efficient capital use." : 
+                      data.current.lendingMetrics.utilization < 40 ?
+                      " Low utilization suggests excess idle capital or limited borrower demand." :
+                      " Moderate utilization suggests balanced supply and demand."}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {data.type === 'dex' && data.current.dexMetrics && (
+          <section className="mb-3 sm:mb-6">
+            <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">DEX Metrics</h3>
+            <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {/* Trading Volume */}
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      24h Volume
+                      <InfoTooltip 
+                        content="Total trading volume in the last 24 hours. This is the primary activity metric for DEXs."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.volume)}
+                    </div>
+                  </div>
+
+                  {/* Capital Efficiency */}
+                  <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Capital Efficiency
+                      <InfoTooltip 
+                        content="Volume/TVL ratio. Shows how well the protocol uses its liquidity. Higher = better."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {data.current.dexMetrics.capitalEfficiency.toFixed(3)}
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      Vol/TVL
+                    </div>
+                  </div>
+
+                  {/* TVL */}
+                  <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Total TVL
+                      <InfoTooltip 
+                        content="Total Value Locked - total liquidity available for trading."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.tvl)}
+                    </div>
+                  </div>
+
+                  {/* 24h Fees */}
+                  <div className="p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      24h Fees
+                      <InfoTooltip 
+                        content="Trading fees generated in the last 24 hours. Shows protocol revenue."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.fees)}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Key Insight */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="text-[10px] sm:text-xs font-semibold text-blue-900 mb-1">💡 Key Insight</div>
+                  <div className="text-[10px] sm:text-xs text-blue-800">
+                    This DEX has a capital efficiency of <strong>{data.current.dexMetrics.capitalEfficiency.toFixed(3)}</strong>, 
+                    meaning every dollar of TVL facilitates <strong>${data.current.dexMetrics.capitalEfficiency.toFixed(2)}</strong> in daily trading volume. 
+                    {data.current.dexMetrics.capitalEfficiency > 0.5 ? 
+                      " Excellent capital efficiency indicates active trading and optimal liquidity deployment." : 
+                      data.current.dexMetrics.capitalEfficiency < 0.1 ?
+                      " Low capital efficiency suggests excess idle liquidity or limited trading activity." :
+                      " Moderate capital efficiency suggests balanced liquidity and trading activity."}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* Two Column Layout for Chart & Methodology */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6 mb-3 sm:mb-6">

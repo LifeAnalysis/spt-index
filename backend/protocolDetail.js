@@ -1,6 +1,7 @@
 import { fetch } from 'undici';
 import { calculateCohortSPTScore, calculateSelfSPTScore, calculateMomentumTrend } from './scoring.js';
 import { buildHistoricalMetrics } from './data.js';
+import { getLendingMetrics } from './lendingMetrics.js';
 
 const PROTOCOL_TYPES = {
   // DEXs - Ethereum
@@ -12,9 +13,7 @@ const PROTOCOL_TYPES = {
   'pancakeswap': 'dex',
   // DEXs - Solana
   'raydium': 'dex',
-  'orca': 'dex',
   // DEXs - Other L2s/Chains
-  'trader-joe': 'dex',
   'quickswap': 'dex',
   'aerodrome': 'dex',
   // Lending - Ethereum
@@ -88,16 +87,6 @@ const PROTOCOL_METADATA = {
     description: 'Leading AMM and liquidity provider on Solana',
     website: 'https://raydium.io',
     twitter: '@RaydiumProtocol'
-  },
-  'orca': {
-    description: 'User-friendly DEX on Solana with concentrated liquidity',
-    website: 'https://www.orca.so',
-    twitter: '@orca_so'
-  },
-  'trader-joe': {
-    description: 'Leading DEX on Avalanche with Liquidity Book innovation',
-    website: 'https://traderjoexyz.com',
-    twitter: '@traderjoe_xyz'
   },
   'quickswap': {
     description: 'Leading DEX on Polygon with low-fee trading',
@@ -211,7 +200,7 @@ function calculateHistoricalScores(tvlData, feesData, volumeData, protocolType, 
       fees: data.fees,
       volume: data.volume,
       tvl: data.tvl,
-      activity: 0
+      feeGrowth: 0 // Historical fee growth not available for past periods
     };
     
     // Calculate SPT score using self-comparison Z-score (protocol vs its own history)
@@ -265,6 +254,7 @@ export async function getProtocolDetail(protocolSlug) {
         total24h: 0, 
         total7d: 0, 
         total30d: 0,
+        change_1d: 0,
         totalDataChart: [] 
       })),
       fetch(`https://api.llama.fi/summary/dexs/${protocolSlug}`).then(r => r.json()).catch(() => ({ 
@@ -290,13 +280,53 @@ export async function getProtocolDetail(protocolSlug) {
     // Build historical metrics for Z-score normalization (90-day window)
     const historicalMetrics = buildHistoricalMetrics(tvlData, feesData, volumeData);
     
-    // Get current metrics
-    const currentMetrics = {
-      fees: feesData.total24h || 0,
-      volume: volumeData.total24h || 0,
-      tvl: currentTvl,
-      activity: 0
-    };
+    // Extract fee growth (change_1d) from fees API
+    const feeGrowth = feesData.change_1d ? parseFloat(feesData.change_1d) : 0;
+    
+    // Fetch protocol-type specific metrics
+    let currentMetrics;
+    let lendingMetrics = null;
+    
+    if (protocolType === 'lending') {
+      // Fetch lending-specific metrics
+      lendingMetrics = await getLendingMetrics(protocolSlug);
+      
+      if (lendingMetrics) {
+        currentMetrics = {
+          borrowVolume: lendingMetrics.totalBorrowUsd,
+          vanillaSupply: lendingMetrics.vanillaSupplyUsd,
+          utilization: lendingMetrics.utilizationRate / 100,
+          fees: feesData.total24h || 0,
+          // Legacy metrics for backwards compatibility
+          volume: lendingMetrics.totalBorrowUsd,
+          tvl: currentTvl,
+          feeGrowth: feeGrowth
+        };
+      } else {
+        // Fallback if lending metrics unavailable
+        currentMetrics = {
+          borrowVolume: 0,
+          vanillaSupply: 0,
+          utilization: 0,
+          fees: feesData.total24h || 0,
+          volume: 0,
+          tvl: currentTvl,
+          feeGrowth: feeGrowth
+        };
+      }
+    } else {
+      // DEX metrics - calculate capital efficiency
+      const volumeAmount = volumeData.total24h || 0;
+      const capitalEfficiency = currentTvl > 0 ? volumeAmount / currentTvl : 0;
+      
+      currentMetrics = {
+        volume: volumeAmount,
+        capitalEfficiency: capitalEfficiency,
+        fees: feesData.total24h || 0,
+        feeGrowth: feeGrowth,
+        tvl: currentTvl
+      };
+    }
     
     // Calculate current SPT score using cohort-based Z-score normalization
     // Note: For protocol detail pages, we use self-comparison since we don't have cohort data here
@@ -328,6 +358,40 @@ export async function getProtocolDetail(protocolSlug) {
     // Get metadata
     const metadata = PROTOCOL_METADATA[protocolSlug] || {};
     
+    // Build current data object
+    const currentData = {
+      protocol: tvlData.name,
+      tvl: currentTvl,
+      fees: currentMetrics.fees,
+      volume: protocolType === 'dex' ? currentMetrics.volume : (lendingMetrics?.totalBorrowUsd || 0),
+      feeGrowth: feeGrowth,
+      rawScore: currentRawScore,
+      score: currentRawScore,
+      momentumScore,
+      momentum,
+      change24h,
+      change7d,
+      change30d
+    };
+    
+    // Add protocol-specific metrics
+    if (protocolType === 'lending' && lendingMetrics) {
+      currentData.lendingMetrics = {
+        borrowVolume: lendingMetrics.totalBorrowUsd,
+        supplyVolume: lendingMetrics.totalSupplyUsd,
+        utilization: lendingMetrics.utilizationRate,
+        vanillaSupply: lendingMetrics.vanillaSupplyUsd,
+        vanillaUtilization: lendingMetrics.vanillaUtilization,
+        vanillaSupplyRatio: lendingMetrics.vanillaSupplyRatio,
+        pools: lendingMetrics.pools
+      };
+    } else if (protocolType === 'dex') {
+      currentData.dexMetrics = {
+        capitalEfficiency: currentMetrics.capitalEfficiency,
+        volumeToTVL: currentMetrics.capitalEfficiency
+      };
+    }
+    
     return {
       slug: protocolSlug,
       name: tvlData.name,
@@ -337,24 +401,12 @@ export async function getProtocolDetail(protocolSlug) {
       website: metadata.website || tvlData.url || '',
       twitter: metadata.twitter || (tvlData.twitter ? `@${tvlData.twitter}` : ''),
       logo: tvlData.logo || '',
-      current: {
-        protocol: tvlData.name, // Add protocol name
-        tvl: currentTvl,
-        fees: currentMetrics.fees,
-        volume: currentMetrics.volume,
-        rawScore: currentRawScore,
-        score: currentRawScore,
-        momentumScore,
-        momentum,
-        change24h,
-        change7d,
-        change30d
-      },
+      current: currentData,
       historicalMetrics: {
         fees: historicalMetrics.fees,
         volume: historicalMetrics.volume,
         tvl: historicalMetrics.tvl,
-        activity: historicalMetrics.activity
+        feeGrowth: historicalMetrics.feeGrowth
       },
       history: finalHistory.map(h => ({
         date: new Date(h.date * 1000).toISOString().split('T')[0], // Format: YYYY-MM-DD
