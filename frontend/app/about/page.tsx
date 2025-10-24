@@ -39,66 +39,81 @@ export default function AboutPage() {
       <section className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto text-center">
           <h1 className="text-display font-bold text-gray-900 mb-6">
-            Stop Guessing.
+            A Novel Scoring System for
             <span className="block mt-2 bg-gradient-to-r from-[#49997E] via-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Start Measuring What Matters.
+              DeFi Protocol Performance
             </span>
           </h1>
           <p className="text-body-lg text-gray-600 leading-relaxed mb-8">
-            The SPT Index cuts through DeFi marketing hype to show you which protocols are <strong>actually generating value</strong> — 
-            not just accumulating capital. Real-time scores based on activity, efficiency, and revenue.
+            The SPT Index is the <strong>first multi-dimensional scoring system</strong> that measures what protocols actually do—
+            trading activity, capital efficiency, borrow demand, and revenue generation. 
+            <span className="font-semibold text-gray-900"> Think credit ratings for DeFi, </span>
+            powered by real-time on-chain data and statistical normalization.
           </p>
           <div className="flex flex-wrap gap-3 justify-center text-label">
             <div className="bg-white px-5 py-2 rounded-full border border-gray-200 shadow-sm">
-              <span className="font-semibold text-gray-700">✅ 100% On-Chain Data</span>
+              <span className="font-semibold text-gray-700">📊 Multi-Metric Scoring</span>
             </div>
             <div className="bg-white px-5 py-2 rounded-full border border-gray-200 shadow-sm">
-              <span className="font-semibold text-gray-700">⚡ Real-Time Updates</span>
+              <span className="font-semibold text-gray-700">⚡ Statistical Normalization</span>
             </div>
             <div className="bg-white px-5 py-2 rounded-full border border-gray-200 shadow-sm">
-              <span className="font-semibold text-gray-700">🎯 Zero Marketing BS</span>
+              <span className="font-semibold text-gray-700">🎯 100% On-Chain Verified</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Why This Matters - Compact Version */}
+      {/* Why This Matters - Novel Methodology */}
       <section className="bg-gradient-to-br from-blue-50 to-purple-50 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
             <h2 className="text-h1 font-bold text-gray-900 mb-6 text-center">
-              Why TVL is Broken (And What We Measure Instead)
+              The Problem: One-Dimensional Thinking
             </h2>
+            <p className="text-body-lg text-gray-600 text-center mb-8 max-w-3xl mx-auto">
+              Traditional DeFi metrics focus on <strong>single dimensions</strong>—TVL for lending, volume for DEXs—
+              which miss the bigger picture. SPT introduces <strong>multi-metric scoring</strong> that captures operational health across protocols.
+            </p>
             
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-6 border-2 border-red-200">
-                <h3 className="text-h3 font-bold text-red-900 mb-4">❌ TVL Misleads You</h3>
+                <h3 className="text-h3 font-bold text-red-900 mb-4">❌ Traditional Approach</h3>
                 <ul className="space-y-2 text-body-sm text-gray-800">
-                  <li>• <strong>Idle Capital:</strong> High TVL ≠ High Activity</li>
+                  <li>• <strong>Single Metric Focus:</strong> TVL or volume alone</li>
                   <li>• <strong>Easy to Game:</strong> Incentives inflate numbers</li>
-                  <li>• <strong>Hidden Leverage:</strong> Can't see the risk</li>
-                  <li>• <strong>No Revenue Signal:</strong> Doesn't show profitability</li>
+                  <li>• <strong>No Efficiency Signal:</strong> Misses capital productivity</li>
+                  <li>• <strong>Surface-Level Only:</strong> Can't see real performance</li>
                 </ul>
               </div>
 
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-6 border-2 border-green-200">
-                <h3 className="text-h3 font-bold text-green-900 mb-4">✅ SPT Shows Real Health</h3>
+                <h3 className="text-h3 font-bold text-green-900 mb-4">✅ SPT Multi-Metric System</h3>
                 <ul className="space-y-2 text-body-sm text-gray-800">
-                  <li>• <strong>Actual Usage:</strong> Volume & borrow demand</li>
-                  <li>• <strong>Capital Efficiency:</strong> Activity per $ locked</li>
-                  <li>• <strong>Fee Revenue:</strong> Real value creation</li>
-                  <li>• <strong>Blue-Chip Focus:</strong> USDC, ETH, wBTC demand</li>
+                  <li>• <strong>Activity Metrics:</strong> Trading volume & borrow demand</li>
+                  <li>• <strong>Efficiency Ratios:</strong> Output per capital input</li>
+                  <li>• <strong>Revenue Generation:</strong> Fee capture & sustainability</li>
+                  <li>• <strong>Asset Quality:</strong> Blue-chip vs long-tail focus</li>
                 </ul>
               </div>
             </div>
 
-            {/* Quick Example */}
-            <div className="mt-6 bg-white rounded-xl p-6 border border-gray-200 shadow-sm">
-              <p className="text-body text-blue-900">
-                <strong>💡 Real Example:</strong> Protocol A has $10B TVL but only $2B daily volume (0.2x efficiency). 
-                Protocol B has $3B TVL but $2.5B volume (0.83x efficiency). 
-                <span className="text-green-700 font-semibold"> SPT ranks B higher</span> because every dollar works 4x harder.
-              </p>
+            {/* Two Examples: DEX and Lending */}
+            <div className="mt-6 grid md:grid-cols-2 gap-4">
+              <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                <p className="text-body-sm text-blue-900">
+                  <strong>🔄 DEX Example:</strong> Protocol A: $10B TVL, $2B volume (0.2x efficiency). 
+                  Protocol B: $3B TVL, $2.5B volume (0.83x). 
+                  <span className="text-green-700 font-semibold"> SPT ranks B higher</span>—capital efficiency wins.
+                </p>
+              </div>
+              <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+                <p className="text-body-sm text-purple-900">
+                  <strong>💰 Lending Example:</strong> Protocol X: $5B supply, $500M borrowed (10% util). 
+                  Protocol Y: $2B supply, $1.2B borrowed (60% util). 
+                  <span className="text-green-700 font-semibold"> SPT ranks Y higher</span>—real demand matters.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -107,9 +122,13 @@ export default function AboutPage() {
       {/* How It Works - Simplified */}
       <section className="container mx-auto px-4 py-12">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-h1 font-bold text-gray-900 mb-8 text-center">
-            What We Actually Measure
+          <h2 className="text-h1 font-bold text-gray-900 mb-4 text-center">
+            Our Scoring Methodology
           </h2>
+          <p className="text-body-lg text-gray-600 text-center mb-8 max-w-3xl mx-auto">
+            Category-specific weights that capture what drives value in each protocol type. 
+            DEXs are scored on <strong>trading efficiency</strong>, lending protocols on <strong>capital utilization</strong>.
+          </p>
 
           <div className="grid md:grid-cols-2 gap-6 mb-8">
             {/* DEX Scoring */}
@@ -188,32 +207,36 @@ export default function AboutPage() {
       <section className="bg-gradient-to-br from-green-50 to-blue-50 py-12">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
-            <h2 className="text-h1 font-bold text-gray-900 mb-8 text-center">
-              What You Get With SPT
+            <h2 className="text-h1 font-bold text-gray-900 mb-4 text-center">
+              Why Multi-Dimensional Scoring Matters
             </h2>
+            <p className="text-body-lg text-gray-600 text-center mb-8 max-w-3xl mx-auto">
+              Single metrics tell one story. SPT combines activity, efficiency, and revenue to give you the <strong>complete picture</strong> 
+              of protocol performance—like a credit rating, but for DeFi.
+            </p>
 
             <div className="grid md:grid-cols-3 gap-6">
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
                 <div className="text-4xl mb-3">🎯</div>
-                <h3 className="text-h3 font-bold text-gray-900 mb-3">Cut Through Hype</h3>
+                <h3 className="text-h3 font-bold text-gray-900 mb-3">See Full Performance</h3>
                 <p className="text-body text-gray-600">
-                  No more guessing which protocols are real. See actual usage, efficiency, and revenue in one glance.
+                  Not just TVL or volume—get a composite score that captures activity, efficiency, revenue, and sustainability all at once.
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
                 <div className="text-4xl mb-3">⚡</div>
-                <h3 className="text-h3 font-bold text-gray-900 mb-3">Spot Efficiency</h3>
+                <h3 className="text-h3 font-bold text-gray-900 mb-3">Compare Apples to Apples</h3>
                 <p className="text-body text-gray-600">
-                  Identify protocols that do more with less. High capital efficiency means better risk-adjusted returns.
+                  Statistical normalization ensures fair comparison—small high-performers can outrank large low-performers.
                 </p>
               </div>
 
               <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
                 <div className="text-4xl mb-3">🏆</div>
-                <h3 className="text-h3 font-bold text-gray-900 mb-3">Make Better Calls</h3>
+                <h3 className="text-h3 font-bold text-gray-900 mb-3">Spot Trends Early</h3>
                 <p className="text-body text-gray-600">
-                  Allocate capital, choose integrations, or analyze risk based on fundamentals—not marketing budgets.
+                  Track 7/30/90-day changes to identify protocols gaining momentum or losing steam before the market notices.
                 </p>
               </div>
             </div>
@@ -256,10 +279,11 @@ export default function AboutPage() {
       <section className="bg-gradient-to-r from-[#49997E] to-blue-600 py-16">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-h1 font-bold text-white mb-4">
-            Ready to See Real Protocol Performance?
+            Experience Multi-Dimensional Protocol Scoring
           </h2>
           <p className="text-body-lg text-white/90 mb-8 max-w-2xl mx-auto">
-            Stop relying on TVL and marketing. Start using data that actually matters.
+            See how protocols really perform when you measure activity, efficiency, and revenue together. 
+            Real-time scores updated every 5 minutes.
           </p>
           <button
             onClick={() => router.push('/')}
