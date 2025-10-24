@@ -205,25 +205,22 @@ function calculateHistoricalScores(tvlData, feesData, volumeData, protocolType, 
     
     // Calculate SPT score using self-comparison Z-score (protocol vs its own history)
     // This shows how the protocol is doing relative to its own past performance
+    // Note: Uses updated formulas - DEX: Vol 40%, CapEff 30%, Fees 20%, FG 10%
+    //                               Lending: Borrow 40%, Vanilla 25%, Util 20%, Fees 15%
     const rawScore = calculateSelfSPTScore(dailyMetrics, historicalMetrics, protocolType);
     
-    // Calculate momentum score using a simpler weighted average for comparison
-    // This provides a different perspective - absolute performance metric
-    const weights = protocolType === 'dex' 
-      ? { fees: 0.35, volume: 0.30, tvl: 0.35 }
-      : { fees: 0.40, volume: 0.0, tvl: 0.60 };
+    // Calculate alternate momentum score for comparison (simplified weighted average)
+    // Uses same metrics as rawScore but simpler normalization
+    const maxFees = historicalMetrics.fees.reduce((a, b) => Math.max(a, b), 1);
+    const maxVolume = historicalMetrics.volume.reduce((a, b) => Math.max(a, b), 1);
+    const maxTvl = historicalMetrics.tvl.reduce((a, b) => Math.max(a, b), 1);
     
-    const normalizedFees = Math.min(dailyMetrics.fees / (historicalMetrics.fees.reduce((a, b) => Math.max(a, b), 1)), 2);
-    const normalizedVolume = protocolType === 'dex' 
-      ? Math.min(dailyMetrics.volume / (historicalMetrics.volume.reduce((a, b) => Math.max(a, b), 1)), 2)
-      : 0;
-    const normalizedTvl = Math.min(dailyMetrics.tvl / (historicalMetrics.tvl.reduce((a, b) => Math.max(a, b), 1)), 2);
+    const normalizedFees = Math.min(dailyMetrics.fees / maxFees, 2);
+    const normalizedVolume = Math.min(dailyMetrics.volume / maxVolume, 2);
+    const normalizedTvl = Math.min(dailyMetrics.tvl / maxTvl, 2);
     
-    const momentumScore = (
-      weights.fees * normalizedFees +
-      weights.volume * normalizedVolume +
-      weights.tvl * normalizedTvl
-    ) * 0.5; // Scale to 0-1 range similar to Z-scores
+    // Simple momentum: equal weight to normalized metrics (for comparison only)
+    const momentumScore = (normalizedFees + normalizedVolume + normalizedTvl) / 3 * 0.5;
     
     history.push({
       date,
