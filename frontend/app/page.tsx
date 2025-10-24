@@ -621,6 +621,15 @@ export default function Home() {
               )}
               <button
                 onClick={() => {
+                  router.push('/about');
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
+              >
+                About SPT Index
+              </button>
+              <button
+                onClick={() => {
                   fetchData();
                   setMobileMenuOpen(false);
                 }}
@@ -654,6 +663,12 @@ export default function Home() {
                   {lastUpdated.toLocaleString()}
                 </span>
               )}
+              <button
+                onClick={() => router.push('/about')}
+                className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
+              >
+                About
+              </button>
               <button
                 onClick={() => fetchData()}
                 disabled={loading}

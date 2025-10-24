@@ -228,21 +228,29 @@ export default function ProtocolDetailPage() {
           
           {/* Desktop Header */}
           <div className="hidden md:block container mx-auto px-4 py-3">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/')}
-                className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors"
-              >
-                <span className="mr-2">←</span>
-                <span className="text-sm font-medium">Dashboard</span>
-              </button>
-              <div className="h-4 w-px bg-gray-300"></div>
-              <div>
-                <h1 className="text-xl font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                  SPT Index
-                </h1>
-                <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors"
+                >
+                  <span className="mr-2">←</span>
+                  <span className="text-sm font-medium">Dashboard</span>
+                </button>
+                <div className="h-4 w-px bg-gray-300"></div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
+                    SPT Index
+                  </h1>
+                  <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
+                </div>
               </div>
+              <button
+                onClick={() => router.push('/about')}
+                className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+              >
+                About
+              </button>
             </div>
           </div>
         </nav>
@@ -299,6 +307,12 @@ export default function ProtocolDetailPage() {
                 <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
               </div>
             </div>
+            <button
+              onClick={() => router.push('/about')}
+              className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+            >
+              About
+            </button>
           </div>
         </div>
       </nav>
