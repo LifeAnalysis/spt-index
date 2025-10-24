@@ -90,32 +90,65 @@ export default function ProtocolDetailPage() {
       setLoading(true);
       setError(null);
       
-      // Include ETag in request headers for conditional request
+      const RAILWAY_API = 'https://spt-index-production.up.railway.app';
+      
+      // Fetch both endpoints in parallel
+      // 1. Protocol detail for historical data and metrics
+      // 2. Main SPT index for cohort-based score (cross-protocol comparison)
       const headers: HeadersInit = {};
       if (etag) {
         headers['If-None-Match'] = etag;
       }
       
-      const RAILWAY_API = 'https://spt-index-production.up.railway.app';
-      const res = await fetch(`${RAILWAY_API}/api/protocol/${slug}`, { headers });
+      const [detailRes, indexRes] = await Promise.all([
+        fetch(`${RAILWAY_API}/api/protocol/${slug}`, { headers }),
+        fetch(`${RAILWAY_API}/api/spt`)
+      ]);
       
       // If 304 Not Modified, data hasn't changed
-      if (res.status === 304) {
+      if (detailRes.status === 304) {
         console.log(`✅ Protocol ${slug} data unchanged (304 Not Modified) - using cached data`);
         setLoading(false);
         return;
       }
       
-      if (!res.ok) throw new Error('Protocol not found');
+      if (!detailRes.ok) throw new Error('Protocol not found');
+      if (!indexRes.ok) throw new Error('Failed to fetch SPT index');
       
       // Store new ETag for next request
-      const newEtag = res.headers.get('ETag');
+      const newEtag = detailRes.headers.get('ETag');
       if (newEtag) {
         setEtag(newEtag);
       }
       
-      const responseData = await res.json();
-      setData(responseData);
+      const detailData = await detailRes.json();
+      const indexData = await indexRes.json();
+      
+      // Find this protocol in the index to get cohort-based score
+      const allProtocols = [...(indexData.dex || []), ...(indexData.lending || [])];
+      const cohortData = allProtocols.find((p: any) => p.slug === slug);
+      
+      // Merge: use cohort score from index, keep everything else from detail
+      const mergedData = {
+        ...detailData,
+        current: {
+          ...detailData.current,
+          score: cohortData?.score || detailData.current.score, // Use cohort-based score
+          change24h: cohortData?.change24h || detailData.current.change24h,
+          change7d: cohortData?.change7d || detailData.current.change7d,
+          change30d: cohortData?.change30d || detailData.current.change30d,
+          momentum: cohortData?.momentum || detailData.current.momentum
+        }
+      };
+      
+      console.log(`✅ Loaded ${slug}:`, {
+        cohortScore: cohortData?.score?.toFixed(4),
+        change24h: cohortData?.change24h?.toFixed(2) + '%',
+        change7d: cohortData?.change7d?.toFixed(2) + '%',
+        momentum: cohortData?.momentum
+      });
+      
+      setData(mergedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
