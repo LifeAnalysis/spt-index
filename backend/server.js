@@ -9,8 +9,8 @@ import Cache from './cache.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000; // Use Railway's PORT env variable
-const CACHE_TTL_MINUTES = 1440; // Cache for 24 hours (1440 minutes)
-const PROTOCOL_CACHE_TTL_MINUTES = 1440; // Cache for 24 hours
+const CACHE_TTL_MINUTES = 5; // Cache for 5 minutes (real-time data)
+const PROTOCOL_CACHE_TTL_MINUTES = 5; // Cache for 5 minutes
 
 // Protocol list for SPT Index
 const PROTOCOLS = [

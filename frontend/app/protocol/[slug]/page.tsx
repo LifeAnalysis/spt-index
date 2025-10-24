@@ -266,28 +266,6 @@ export default function ProtocolDetailPage() {
                 <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {data?.current?.score !== undefined && (
-                <>
-                  <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
-                    <span className={`inline-block px-2 py-0.5 rounded text-caption font-bold ${rating.color}`}>
-                      {rating.label}
-                    </span>
-                  </div>
-                  <div className="text-right">
-                    <div className="flex items-center justify-end gap-1 text-caption text-gray-500">
-                      SPT Score
-                      <InfoTooltip 
-                        content="compares this protocol against category peers using z-score normalization. higher = better performance vs competitors."
-                        position="bottom"
-                        maxWidth="600px"
-                      />
-                    </div>
-                    <div className="text-lg font-bold text-[#49997E]">{data.current.score.toFixed(4)}</div>
-                  </div>
-                </>
-              )}
-            </div>
           </div>
         </div>
       </nav>
