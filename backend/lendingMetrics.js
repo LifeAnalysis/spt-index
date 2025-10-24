@@ -21,10 +21,10 @@ const LENDING_PROJECT_NAMES = {
 };
 
 /**
- * Fetch lending pool data from DeFiLlama's borrow rates API
- * Returns pools with borrow/supply data
+ * Fetch lending pool data from DeFiLlama's yields API
+ * Returns pools with supply (tvlUsd) data
  */
-async function fetchBorrowPoolsData() {
+async function fetchYieldPoolsData() {
   try {
     const response = await fetch('https://yields.llama.fi/pools', {
       headers: {
@@ -39,8 +39,30 @@ async function fetchBorrowPoolsData() {
     const data = await response.json();
     return data.data || [];
   } catch (error) {
-    console.error('Error fetching borrow pools data:', error.message);
+    console.error('Error fetching yield pools data:', error.message);
     return [];
+  }
+}
+
+/**
+ * Fetch protocol-level data including borrowed amounts
+ */
+async function fetchProtocolData(protocolSlug) {
+  try {
+    const response = await fetch(`https://api.llama.fi/protocol/${protocolSlug}`, {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`API returned ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching protocol data for ${protocolSlug}:`, error.message);
+    return null;
   }
 }
 
@@ -52,8 +74,18 @@ export async function getLendingMetrics(protocolSlug) {
   try {
     const projectName = LENDING_PROJECT_NAMES[protocolSlug] || protocolSlug;
     
-    // Fetch all pools data
-    const allPools = await fetchBorrowPoolsData();
+    // Fetch protocol-level data for borrow amounts
+    const protocolData = await fetchProtocolData(protocolSlug);
+    if (!protocolData || !protocolData.currentChainTvls) {
+      console.log(`No protocol data found for ${protocolSlug}`);
+      return null;
+    }
+    
+    // Extract total borrowed from currentChainTvls
+    let totalBorrowUsd = protocolData.currentChainTvls.borrowed || 0;
+    
+    // Fetch all pools data for supply breakdown
+    const allPools = await fetchYieldPoolsData();
     
     // Filter pools for this protocol
     const protocolPools = allPools.filter(pool => 
@@ -67,21 +99,17 @@ export async function getLendingMetrics(protocolSlug) {
     
     console.log(`Found ${protocolPools.length} pools for ${protocolSlug}`);
     
-    // Aggregate metrics across all pools
+    // First pass: aggregate supply metrics
     let totalSupplyUsd = 0;
-    let totalBorrowUsd = 0;
     let vanillaSupplyUsd = 0;
-    let vanillaBorrowUsd = 0;
     
-    const poolDetails = [];
+    const poolData = [];
     
     for (const pool of protocolPools) {
-      const supplyUsd = pool.totalSupplyUsd || 0;
-      const borrowUsd = pool.totalBorrowUsd || 0;
+      const supplyUsd = pool.tvlUsd || 0;
       const symbol = pool.symbol || '';
       
       totalSupplyUsd += supplyUsd;
-      totalBorrowUsd += borrowUsd;
       
       // Check if this is a vanilla asset
       const isVanilla = VANILLA_ASSETS.some(vanillaSymbol => 
@@ -90,23 +118,40 @@ export async function getLendingMetrics(protocolSlug) {
       
       if (isVanilla) {
         vanillaSupplyUsd += supplyUsd;
-        vanillaBorrowUsd += borrowUsd;
       }
       
-      poolDetails.push({
+      poolData.push({
         symbol,
         chain: pool.chain,
         supplyUsd,
-        borrowUsd,
-        utilization: supplyUsd > 0 ? (borrowUsd / supplyUsd) * 100 : 0,
         isVanilla,
+        apyBase: pool.apyBase || 0,
         apyBaseBorrow: pool.apyBaseBorrow || 0,
         ltv: pool.ltv || 0
       });
     }
     
+    // Second pass: calculate pool-level borrows based on total supply
+    const poolDetails = poolData.map(pool => {
+      const estimatedBorrowUsd = totalSupplyUsd > 0
+        ? (pool.supplyUsd / totalSupplyUsd) * totalBorrowUsd
+        : 0;
+      
+      return {
+        ...pool,
+        borrowUsd: estimatedBorrowUsd,
+        utilization: pool.supplyUsd > 0 ? (estimatedBorrowUsd / pool.supplyUsd) * 100 : 0
+      };
+    });
+    
     // Calculate overall metrics
     const utilizationRate = totalSupplyUsd > 0 ? (totalBorrowUsd / totalSupplyUsd) * 100 : 0;
+    
+    // Estimate vanilla borrow based on vanilla supply ratio
+    const vanillaBorrowUsd = totalBorrowUsd > 0 && totalSupplyUsd > 0
+      ? (vanillaSupplyUsd / totalSupplyUsd) * totalBorrowUsd
+      : 0;
+    
     const vanillaUtilization = vanillaSupplyUsd > 0 ? (vanillaBorrowUsd / vanillaSupplyUsd) * 100 : 0;
     const vanillaSupplyRatio = totalSupplyUsd > 0 ? (vanillaSupplyUsd / totalSupplyUsd) * 100 : 0;
     
@@ -127,7 +172,7 @@ export async function getLendingMetrics(protocolSlug) {
       vanillaSupplyRatio,
       capitalEfficiency: totalSupplyUsd > 0 ? totalBorrowUsd / totalSupplyUsd : 0,
       poolCount: protocolPools.length,
-      pools: poolDetails
+      pools: poolDetails.slice(0, 20) // Limit to top 20 pools for performance
     };
   } catch (error) {
     console.error(`Error getting lending metrics for ${protocolSlug}:`, error.message);
