@@ -789,50 +789,79 @@ export default function ProtocolDetailPage() {
                 </p>
               </div>
               
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
-                  <span className="text-body-sm font-medium text-gray-700">💵 Fees</span>
-                  <span className="text-score-md text-[#49997E]">
-                    {data.type === 'dex' ? '35%' : '40%'}
-                  </span>
+              {data.type === 'dex' ? (
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">📊 Trading Volume</span>
+                    <span className="text-score-md text-blue-600">40%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">⚡ Capital Efficiency</span>
+                    <span className="text-score-md text-purple-600">30%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💵 Fee Revenue</span>
+                    <span className="text-score-md text-[#49997E]">20%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">📈 Fee Growth</span>
+                    <span className="text-score-md text-amber-600">10%</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
-                  <span className="text-body-sm font-medium text-gray-700">📊 Volume</span>
-                  <span className="text-score-md text-blue-600">
-                    {data.type === 'dex' ? '30%' : '15%'}
-                  </span>
+              ) : (
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💰 Borrow Volume</span>
+                    <span className="text-score-md text-blue-600">40%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">🪙 Vanilla Assets</span>
+                    <span className="text-score-md text-purple-600">25%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">⚡ Utilization Rate</span>
+                    <span className="text-score-md text-amber-600">20%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💵 Fee Revenue</span>
+                    <span className="text-score-md text-[#49997E]">15%</span>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
-                  <span className="text-body-sm font-medium text-gray-700">💰 TVL</span>
-                  <span className="text-score-md text-amber-600">
-                    {data.type === 'dex' ? '25%' : '35%'}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between bg-gradient-to-r from-gray-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
-                  <span className="text-body-sm font-medium text-gray-700">⚡ Activity</span>
-                  <span className="text-score-md text-gray-700">10%</span>
-                </div>
-              </div>
+              )}
 
               <div className="pt-4 border-t border-gray-200">
-                <div className="text-caption text-gray-600 space-y-2">
-                  <p className="font-semibold text-gray-900">Calculation Process:</p>
-                  <div className="space-y-1.5">
-                    <div className="flex items-start gap-2">
-                      <span className="text-[#49997E] font-bold">1.</span>
-                      <span>Z-score normalization (90d window)</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-blue-600 font-bold">2.</span>
-                      <span>Sigmoid mapping [0,1]</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-amber-600 font-bold">3.</span>
-                      <span>Weighted aggregation</span>
-                    </div>
-                    <div className="flex items-start gap-2">
-                      <span className="text-gray-600 font-bold">4.</span>
-                      <span>Relative peer normalization</span>
+                <div className="text-caption text-gray-600 space-y-3">
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-2">
+                      {data.type === 'dex' ? 'Why These Metrics?' : 'Why These Metrics?'}
+                    </p>
+                    <p className="text-[11px] leading-relaxed">
+                      {data.type === 'dex' 
+                        ? 'We prioritize trading volume (actual activity) and capital efficiency (volume/TVL ratio) over raw TVL. A DEX with $100M TVL facilitating $80M daily volume (0.8x efficiency) is more valuable than one with $1B TVL and $50M volume (0.05x efficiency).'
+                        : 'We moved away from TVL to focus on fundamentals: borrow volume drives revenue, vanilla assets (USDC, USDT, DAI, ETH, wBTC) represent real demand, and utilization rate measures capital efficiency. TVL obscures leverage and can be gamed.'
+                      }
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-1">Calculation Process:</p>
+                    <div className="space-y-1">
+                      <div className="flex items-start gap-2">
+                        <span className="text-[#49997E] font-bold text-[10px]">1.</span>
+                        <span className="text-[10px]">Z-score normalization (90d window)</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-blue-600 font-bold text-[10px]">2.</span>
+                        <span className="text-[10px]">Sigmoid mapping [0,1]</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-600 font-bold text-[10px]">3.</span>
+                        <span className="text-[10px]">Weighted aggregation</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-gray-600 font-bold text-[10px]">4.</span>
+                        <span className="text-[10px]">Relative peer normalization</span>
+                      </div>
                     </div>
                   </div>
                 </div>
