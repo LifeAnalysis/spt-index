@@ -78,7 +78,7 @@ export default function ProtocolDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
-  const [showMomentum, setShowMomentum] = useState(true);
+  const [showMomentum, setShowMomentum] = useState(false);
   const [etag, setEtag] = useState<string | null>(null);
 
   useEffect(() => {
@@ -660,7 +660,7 @@ export default function ProtocolDetailPage() {
                   
                   {/* Controls - Compact Single Line */}
                   <div className="flex flex-wrap gap-2">
-                    {/* Momentum Toggle */}
+                    {/* Self-Trend Toggle */}
                     <button
                       onClick={() => setShowMomentum(!showMomentum)}
                       className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
@@ -668,10 +668,10 @@ export default function ProtocolDetailPage() {
                           ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm'
                           : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-orange-300'
                       }`}
-                      title={showMomentum ? 'Hide Momentum Score' : 'Show Momentum Score'}
+                      title={showMomentum ? 'Hide Self-Comparison Trend' : 'Show Self-Comparison Trend'}
                     >
                       <span className={`w-2 h-2 rounded-full ${showMomentum ? 'bg-white' : 'bg-orange-500'}`}></span>
-                      <span>Momentum</span>
+                      <span>Self-Trend</span>
                     </button>
                     
                     {/* Time Range Buttons */}
@@ -725,7 +725,7 @@ export default function ProtocolDetailPage() {
                         }}
                         formatter={(value: number, name: string) => {
                           if (name === 'score') return [value.toFixed(6), 'SPT Score'];
-                          if (name === 'momentumScore') return [value.toFixed(6), 'Momentum'];
+                          if (name === 'momentumScore') return [value.toFixed(6), 'Self-Trend'];
                           return [value.toFixed(6), name];
                         }}
                         labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
@@ -770,7 +770,7 @@ export default function ProtocolDetailPage() {
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-0.5 bg-orange-500 rounded"></div>
                         <span className="text-gray-600">
-                          <strong className="text-orange-600">Momentum:</strong> Historical self-comparison vs own baseline
+                          <strong className="text-orange-600">Self-Trend:</strong> Performance vs own 90-day baseline
                         </span>
                       </div>
                     )}
