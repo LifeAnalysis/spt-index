@@ -284,8 +284,8 @@ export async function getProtocolDetail(protocolSlug) {
     let currentMetrics;
     let lendingMetrics = null;
     
-    if (protocolType === 'lending') {
-      // Fetch lending-specific metrics
+    if (protocolType === 'lending' || protocolType === 'cdp') {
+      // Fetch lending/CDP metrics (CDP protocols mint stablecoins, similar to borrow)
       lendingMetrics = await getLendingMetrics(protocolSlug);
       
       if (lendingMetrics) {
@@ -372,7 +372,7 @@ export async function getProtocolDetail(protocolSlug) {
     };
     
     // Add protocol-specific metrics
-    if (protocolType === 'lending' && lendingMetrics) {
+    if ((protocolType === 'lending' || protocolType === 'cdp') && lendingMetrics) {
       currentData.lendingMetrics = {
         borrowVolume: lendingMetrics.totalBorrowUsd,
         supplyVolume: lendingMetrics.totalSupplyUsd,

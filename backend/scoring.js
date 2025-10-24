@@ -99,6 +99,12 @@ const DEFAULT_WEIGHTS = {
     vanillaSupply: 0.25,    // 25% - Vanilla asset supply (growth bottleneck)
     utilization: 0.20,      // 20% - Utilization rate (capital efficiency)
     fees: 0.15              // 15% - Fee revenue (sustainability)
+  },
+  cdp: {
+    borrowVolume: 0.40,     // 40% - Minted stablecoin amount (demand signal)
+    vanillaSupply: 0.30,    // 30% - Blue-chip collateral (ETH, wBTC)
+    utilization: 0.20,      // 20% - Debt ceiling utilization
+    fees: 0.10              // 10% - Stability fee revenue
   }
 };
 

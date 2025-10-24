@@ -9,24 +9,36 @@ const PROTOCOL_TYPES = {
   'curve-dex': 'dex',
   'sushiswap': 'dex',
   'balancer': 'dex',
+  'uniswap-v4': 'dex',
   // DEXs - Multi-chain
   'pancakeswap': 'dex',
   // DEXs - Solana
   'raydium': 'dex',
+  'orca-dex': 'dex',
+  'meteora-dlmm': 'dex',
   // DEXs - Other L2s/Chains
   'quickswap': 'dex',
   'aerodrome': 'dex',
+  'momentum': 'dex',
   // Lending - Ethereum
   'aave': 'lending',
   'compound-v3': 'lending',
   'makerdao': 'lending',
   'morpho': 'lending',
   'spark': 'lending',
+  'euler-v2': 'lending',
+  'fluid-lending': 'lending',
+  'maple': 'lending',
   // Lending - Other Chains
   'justlend': 'lending',
   'venus': 'lending',
   'radiant': 'lending',
-  'benqi': 'lending'
+  'benqi': 'lending',
+  'kamino-lend': 'lending',
+  // CDP - Collateralized Debt Position
+  'liquity-v1': 'cdp',
+  'crvusd': 'cdp',
+  'liquity-v2': 'cdp'
 };
 
 // Protocol slug mappings (same as API slugs)
@@ -37,19 +49,31 @@ const PROTOCOL_SLUGS_MAP = {
   'pancakeswap': 'pancakeswap',
   'sushiswap': 'sushiswap',
   'balancer': 'balancer',
+  'uniswap-v4': 'uniswap-v4',
   'raydium': 'raydium',
+  'orca-dex': 'orca-dex',
+  'meteora-dlmm': 'meteora-dlmm',
   'quickswap': 'quickswap',
   'aerodrome': 'aerodrome',
+  'momentum': 'momentum',
   // Lending
   'aave': 'aave',
   'compound-v3': 'compound-v3',
   'makerdao': 'makerdao',
   'morpho': 'morpho',
   'spark': 'spark',
+  'euler-v2': 'euler-v2',
+  'fluid-lending': 'fluid-lending',
+  'maple': 'maple',
   'justlend': 'justlend',
   'venus': 'venus',
   'radiant': 'radiant',
-  'benqi': 'benqi'
+  'benqi': 'benqi',
+  'kamino-lend': 'kamino-lend',
+  // CDP
+  'liquity-v1': 'liquity-v1',
+  'crvusd': 'crvusd',
+  'liquity-v2': 'liquity-v2'
 };
 
 
@@ -187,8 +211,9 @@ async function getProtocolData(protocol) {
     let currentMetrics;
     let lendingMetrics = null;
     
-    if (protocolType === 'lending') {
-      // Fetch lending-specific metrics (borrow volume, utilization, vanilla assets)
+    if (protocolType === 'lending' || protocolType === 'cdp') {
+      // Fetch lending/CDP metrics (borrow volume, utilization, vanilla assets)
+      // CDP protocols mint stablecoins (debt) which is similar to lending borrow volumes
       lendingMetrics = await getLendingMetrics(protocol);
       
       if (lendingMetrics) {
@@ -203,9 +228,9 @@ async function getProtocolData(protocol) {
           feeGrowth: feeGrowth
         };
         
-        console.log(`${tvlData.name} (lending): Borrow=$${lendingMetrics.totalBorrowUsd.toLocaleString()}, Vanilla=$${lendingMetrics.vanillaSupplyUsd.toLocaleString()}, Utilization=${lendingMetrics.utilizationRate.toFixed(1)}%, Fees=$${currentMetrics.fees.toLocaleString()}`);
+        console.log(`${tvlData.name} (${protocolType}): Borrow=$${lendingMetrics.totalBorrowUsd.toLocaleString()}, Vanilla=$${lendingMetrics.vanillaSupplyUsd.toLocaleString()}, Utilization=${lendingMetrics.utilizationRate.toFixed(1)}%, Fees=$${currentMetrics.fees.toLocaleString()}`);
       } else {
-        // Fallback if lending metrics unavailable
+        // Fallback if lending/CDP metrics unavailable
         currentMetrics = {
           borrowVolume: 0,
           vanillaSupply: 0,
@@ -215,7 +240,7 @@ async function getProtocolData(protocol) {
           tvl: currentTvl,
           feeGrowth: feeGrowth
         };
-        console.log(`${tvlData.name} (lending): No borrow data available, using fallback metrics`);
+        console.log(`${tvlData.name} (${protocolType}): No borrow data available, using fallback metrics`);
       }
     } else {
       // DEX metrics - calculate capital efficiency (Volume/TVL ratio)
@@ -327,6 +352,7 @@ export async function getSPTIndex(protocols) {
   // Separate protocols by type for cohort analysis
   const dexProtocols = validMetrics.filter(p => p.type === 'dex');
   const lendingProtocols = validMetrics.filter(p => p.type === 'lending');
+  const cdpProtocols = validMetrics.filter(p => p.type === 'cdp');
   
   // Build cohort-wide historical metrics for each type
   const buildCohortMetrics = (protocolList) => {
@@ -342,10 +368,11 @@ export async function getSPTIndex(protocols) {
   
   const dexCohortMetrics = buildCohortMetrics(dexProtocols);
   const lendingCohortMetrics = buildCohortMetrics(lendingProtocols);
+  const cdpCohortMetrics = buildCohortMetrics(cdpProtocols);
   
   // Calculate both scores for each protocol
   const scored = validMetrics.map(p => {
-    const cohortMetrics = p.type === 'dex' ? dexCohortMetrics : lendingCohortMetrics;
+    const cohortMetrics = p.type === 'dex' ? dexCohortMetrics : (p.type === 'cdp' ? cdpCohortMetrics : lendingCohortMetrics);
     
     // Calculate current SPT score (cross-protocol comparison)
     let rawScore = 0;
@@ -466,9 +493,15 @@ export async function getSPTIndex(protocols) {
     .map(p => ({ ...p, score: p.rawScore }))
     .sort((a, b) => b.score - a.score);
   
+  const cdpResults = scored
+    .filter(p => p.type === 'cdp')
+    .map(p => ({ ...p, score: p.rawScore }))
+    .sort((a, b) => b.score - a.score);
+  
   return {
     dex: dexResults,
     lending: lendingResults,
-    all: [...dexResults, ...lendingResults].sort((a, b) => b.score - a.score)
+    cdp: cdpResults,
+    all: [...dexResults, ...lendingResults, ...cdpResults].sort((a, b) => b.score - a.score)
   };
 }
