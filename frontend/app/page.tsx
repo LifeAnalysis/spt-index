@@ -780,14 +780,14 @@ export default function Home() {
               {renderProtocolTable(
                 data.dex,
                 'DEX Protocols',
-                'Z-score normalized ranking: Fees 35%, Volume 30%, TVL 25%, Fee Growth 10%',
+                'Z-score normalized ranking: Trading Volume 40%, Capital Efficiency 30%, Fees 20%, Fee Growth 10%',
                 '🔄'
               )}
               
               {renderProtocolTable(
                 data.lending,
                 'Lending Protocols',
-                'Z-score normalized ranking: Fees 40%, TVL 35%, Volume 15%, Fee Growth 10%',
+                'Z-score normalized ranking: Borrow Volume 40%, Vanilla Assets 25%, Utilization 20%, Fees 15%',
                 '💰'
               )}
             </section>
@@ -821,7 +821,7 @@ export default function Home() {
                     <div className="w-8 h-8 rounded-full bg-[#49997E] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
                     <h5 className="font-bold text-gray-900 text-sm">Statistical Normalization</h5>
                     <InfoTooltip 
-                      content="converts raw metrics (fees, volume, tvl) to z-scores, then applies sigmoid function to map values 0-1. removes scale differences and dampens outliers."
+                      content="converts raw metrics (volume, fees, utilization, capital efficiency, vanilla assets) to z-scores, then applies sigmoid function to map values 0-1. removes scale differences and dampens outliers."
                       position="bottom"
                       maxWidth="600px"
                     />
@@ -841,7 +841,7 @@ export default function Home() {
                     <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
                     <h5 className="font-bold text-gray-900 text-sm">Weighted Aggregation</h5>
                     <InfoTooltip 
-                      content="combines normalized metrics with protocol-specific weights. dex prioritizes volume + fees, lending prioritizes fees + tvl."
+                      content="combines normalized metrics with protocol-specific weights. dex prioritizes trading volume + capital efficiency, lending prioritizes borrow volume + vanilla assets."
                       position="bottom"
                       maxWidth="600px"
                     />
@@ -852,11 +852,11 @@ export default function Home() {
                   <div className="space-y-1.5 text-xs">
                     <div className="bg-blue-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">DEX</div>
-                      <div className="text-gray-600">F:35% V:30% T:25% FG:10%</div>
+                      <div className="text-gray-600">Vol:40% CapEff:30% Fees:20% FG:10%</div>
                     </div>
                     <div className="bg-emerald-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">Lending</div>
-                      <div className="text-gray-600">F:40% T:35% V:15% FG:10%</div>
+                      <div className="text-gray-600">Borrow:40% Vanilla:25% Util:20% Fees:15%</div>
                     </div>
                   </div>
                 </div>
