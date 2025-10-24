@@ -287,7 +287,7 @@ export default function Home() {
   };
 
   // Mobile Card Component
-  const MobileProtocolCard = ({ protocol }: { protocol: Protocol }) => {
+  const MobileProtocolCard = ({ protocol, index }: { protocol: Protocol; index: number }) => {
     const rating = getScoreRating(protocol.score);
     
     return (
@@ -296,29 +296,34 @@ export default function Home() {
           const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
           if (slug) router.push(`/protocol/${slug}`);
         }}
-        className="bg-white rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow active:scale-[0.98] active:shadow-sm cursor-pointer"
+        className="bg-white rounded-lg p-3 active:scale-[0.98] transition-transform cursor-pointer border border-gray-200 shadow-sm hover:shadow-md"
       >
-        {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="flex items-center gap-3">
+          {/* Rank */}
+          <div className="text-gray-400 font-medium text-sm w-6 flex-shrink-0">
+            {index + 1}
+          </div>
+          
+          {/* Logo & Name */}
+          <div className="flex items-center gap-2.5 flex-1 min-w-0">
             {protocol.logo && (
               <img 
                 src={protocol.logo} 
                 alt={`${protocol.protocol} logo`}
-                className="w-10 h-10 rounded-full flex-shrink-0"
+                className="w-9 h-9 rounded-full flex-shrink-0"
                 onError={(e) => {
                   e.currentTarget.style.display = 'none';
                 }}
               />
             )}
             <div className="min-w-0 flex-1">
-              <h3 className="text-body-lg font-semibold text-gray-900 truncate">{protocol.protocol}</h3>
+              <div className="text-gray-900 font-semibold text-base truncate">{protocol.protocol}</div>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`inline-flex px-2 py-0.5 rounded text-caption font-bold ${rating.color}`}>
+                <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ${rating.color}`}>
                   {rating.label}
                 </span>
                 {protocol.momentum && (
-                  <span className="text-lg leading-none" title={`Momentum: ${protocol.momentum}`}>
+                  <span className="text-sm" title={`Momentum: ${protocol.momentum}`}>
                     {protocol.momentum === 'growing' && '📈'}
                     {protocol.momentum === 'declining' && '📉'}
                     {protocol.momentum === 'stable' && '➡️'}
@@ -327,25 +332,16 @@ export default function Home() {
               </div>
             </div>
           </div>
-          <div className="text-right flex-shrink-0">
-            <div className="text-xl font-bold text-[#49997E] tabular-nums">{formatScore(protocol.score)}</div>
-            <div className="text-caption text-gray-500">Score</div>
-          </div>
-        </div>
-
-        {/* Changes */}
-        <div className="grid grid-cols-3 gap-2 py-3 border-t border-gray-100">
-          <div className="text-center">
-            <div className="text-caption text-gray-500 mb-1">24h</div>
-            <div className="text-body-sm font-semibold tabular-nums">{formatChange(protocol.change24h)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-caption text-gray-500 mb-1">7d</div>
-            <div className="text-body-sm font-semibold tabular-nums">{formatChange(protocol.change7d)}</div>
-          </div>
-          <div className="text-center">
-            <div className="text-caption text-gray-500 mb-1">30d</div>
-            <div className="text-body-sm font-semibold tabular-nums">{formatChange(protocol.change30d)}</div>
+          
+          {/* Changes */}
+          <div className="flex flex-col gap-1 items-end flex-shrink-0">
+            <div className={`text-xs font-semibold tabular-nums ${protocol.change24h !== null && protocol.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+              {formatChange(protocol.change24h)}
+            </div>
+            <div className={`text-xs font-medium tabular-nums ${protocol.change7d !== null && protocol.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+              {formatChange(protocol.change7d)}
+            </div>
+            <div className="text-[10px] text-gray-500">24h/7d</div>
           </div>
         </div>
       </div>
@@ -369,18 +365,26 @@ export default function Home() {
 
     return (
       <div className="mb-8">
-        <div className="mb-4">
+        <div className="mb-4 hidden md:block">
           <div className="flex items-center gap-3 mb-2">
             <span className="text-h1">{icon}</span>
             <h2 className="text-h2 text-gray-900">{title}</h2>
           </div>
           <p className="text-body-sm text-gray-600">{description}</p>
         </div>
+        
+        {/* Mobile Title */}
+        <div className="md:hidden mb-3">
+          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+            <span className="text-xl">{icon}</span>
+            {title}
+          </h2>
+        </div>
 
         {/* Mobile Cards (< 768px) */}
-        <div className="md:hidden space-y-3">
-          {sortedProtocols.map((protocol) => (
-            <MobileProtocolCard key={protocol.protocol} protocol={protocol} />
+        <div className="md:hidden space-y-2">
+          {sortedProtocols.map((protocol, index) => (
+            <MobileProtocolCard key={protocol.protocol} protocol={protocol} index={index} />
           ))}
         </div>
 

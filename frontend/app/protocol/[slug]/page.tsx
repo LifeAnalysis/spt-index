@@ -159,7 +159,18 @@ export default function ProtocolDetailPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-3 flex justify-between items-center">
+          {/* Mobile Header - Just Back Arrow */}
+          <div className="md:hidden container mx-auto px-3 py-3">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center gap-1 text-gray-600 hover:text-[#49997E] transition-colors"
+            >
+              <span className="text-xl">←</span>
+            </button>
+          </div>
+          
+          {/* Desktop Header */}
+          <div className="hidden md:block container mx-auto px-4 py-3">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/')}
@@ -202,44 +213,57 @@ export default function ProtocolDetailPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Sticky Navigation */}
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 py-3 flex justify-between items-center">
-          <div className="flex items-center gap-4">
-            <button
-              onClick={() => router.push('/')}
-              className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors"
-            >
-              <span className="mr-2">←</span>
-              <span className="text-sm font-medium">Dashboard</span>
-            </button>
-            <div className="h-4 w-px bg-gray-300"></div>
-            <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                SPT Index
-              </h1>
-              <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
+        {/* Mobile Header - Just Back Arrow */}
+        <div className="md:hidden container mx-auto px-3 py-3">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-1 text-gray-600 hover:text-[#49997E] transition-colors"
+          >
+            <span className="text-xl">←</span>
+          </button>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:block container mx-auto px-4 py-3">
+          <div className="flex justify-between items-center">
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/')}
+                className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors"
+              >
+                <span className="mr-2">←</span>
+                <span className="text-sm font-medium">Dashboard</span>
+              </button>
+              <div className="h-4 w-px bg-gray-300"></div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
+                  SPT Index
+                </h1>
+                <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
+              </div>
             </div>
-          </div>
-          <div className="flex items-center gap-3">
-            {data?.current?.score !== undefined && (
-              <>
-                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
-                  <span className={`inline-block px-2 py-0.5 rounded text-caption font-bold ${rating.color}`}>
-                    {rating.label}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center justify-end gap-1 text-caption text-gray-500">
-                    SPT Score
-                    <InfoTooltip 
-                      content="compares this protocol against category peers using z-score normalization. higher = better performance vs competitors."
-                      position="bottom"
-                      maxWidth="600px"
-                    />
+            <div className="flex items-center gap-3">
+              {data?.current?.score !== undefined && (
+                <>
+                  <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
+                    <span className={`inline-block px-2 py-0.5 rounded text-caption font-bold ${rating.color}`}>
+                      {rating.label}
+                    </span>
                   </div>
-                  <div className="text-lg font-bold text-[#49997E]">{data.current.score.toFixed(4)}</div>
-                </div>
-              </>
-            )}
+                  <div className="text-right">
+                    <div className="flex items-center justify-end gap-1 text-caption text-gray-500">
+                      SPT Score
+                      <InfoTooltip 
+                        content="compares this protocol against category peers using z-score normalization. higher = better performance vs competitors."
+                        position="bottom"
+                        maxWidth="600px"
+                      />
+                    </div>
+                    <div className="text-lg font-bold text-[#49997E]">{data.current.score.toFixed(4)}</div>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </nav>
@@ -287,38 +311,38 @@ export default function ProtocolDetailPage() {
               </div>
             )}
             
-            {/* Ultra Compact Metrics Grid */}
-            <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:gap-4">
-              <div className="flex items-center gap-1">
-                <span className="text-sm sm:text-lg">💰</span>
-                <div>
-                  <div className="font-semibold text-gray-900 text-xs sm:text-base">{formatCurrency(data.current.tvl)}</div>
-                  <div className="text-[9px] sm:text-xs text-gray-500">TVL</div>
+            {/* Flatter Metrics Row */}
+            <div className="flex items-center gap-3 sm:gap-6 flex-wrap">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg">💰</span>
+                <div className="flex items-baseline gap-1">
+                  <div className="font-bold text-gray-900 text-sm sm:text-base">{formatCurrency(data.current.tvl)}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 font-medium">TVL</div>
                 </div>
               </div>
               
-              <div className="flex items-center gap-1">
-                <span className="text-sm sm:text-lg">💵</span>
-                <div>
-                  <div className="font-semibold text-gray-900 text-xs sm:text-base">{formatCurrency(data.current.fees)}</div>
-                  <div className="text-[9px] sm:text-xs text-gray-500">Fees</div>
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg">💵</span>
+                <div className="flex items-baseline gap-1">
+                  <div className="font-bold text-gray-900 text-sm sm:text-base">{formatCurrency(data.current.fees)}</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 font-medium">Fees</div>
                 </div>
               </div>
               
               {data.type === 'dex' && (
-                <div className="flex items-center gap-1">
-                  <span className="text-sm sm:text-lg">📊</span>
-                  <div>
-                    <div className="font-semibold text-gray-900 text-xs sm:text-base">{formatCurrency(data.current.volume)}</div>
-                    <div className="text-[9px] sm:text-xs text-gray-500">Vol</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-base sm:text-lg">📊</span>
+                  <div className="flex items-baseline gap-1">
+                    <div className="font-bold text-gray-900 text-sm sm:text-base">{formatCurrency(data.current.volume)}</div>
+                    <div className="text-[10px] sm:text-xs text-gray-500 font-medium">Vol</div>
                   </div>
                 </div>
               )}
               
-              <div className="flex items-center gap-1">
-                <span className="text-sm sm:text-lg">⚡</span>
-                <div>
-                  <div className="font-semibold text-gray-900 text-xs sm:text-base">
+              <div className="flex items-center gap-1.5">
+                <span className="text-base sm:text-lg">⚡</span>
+                <div className="flex items-baseline gap-1">
+                  <div className="font-bold text-gray-900 text-sm sm:text-base">
                     {data?.current?.fees !== undefined && data?.current?.tvl !== undefined && data.current.tvl > 0
                       ? data.type === 'dex' && data?.current?.volume !== undefined
                         ? (((data.current.fees + data.current.volume) / data.current.tvl) * 100).toFixed(1)
@@ -327,7 +351,7 @@ export default function ProtocolDetailPage() {
                     }
                     {data?.current?.fees !== undefined && data?.current?.tvl !== undefined && data.current.tvl > 0 && '%'}
                   </div>
-                  <div className="text-[9px] sm:text-xs text-gray-500">Eff</div>
+                  <div className="text-[10px] sm:text-xs text-gray-500 font-medium">Eff</div>
                 </div>
               </div>
             </div>
@@ -401,38 +425,36 @@ export default function ProtocolDetailPage() {
                     </p>
                   </div>
                   
-                  {/* Controls - Stacked on mobile */}
-                  <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                  {/* Controls - Compact Single Line */}
+                  <div className="flex flex-wrap gap-2">
                     {/* Momentum Toggle */}
                     <button
                       onClick={() => setShowMomentum(!showMomentum)}
-                      className={`px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all flex items-center justify-center gap-1.5 min-h-[44px] sm:min-h-[36px] ${
+                      className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
                         showMomentum
                           ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-sm'
-                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-orange-300'
                       }`}
                       title={showMomentum ? 'Hide Momentum Score' : 'Show Momentum Score'}
                     >
-                      <span className="w-2 h-2 rounded-full bg-current"></span>
+                      <span className={`w-2 h-2 rounded-full ${showMomentum ? 'bg-white' : 'bg-orange-500'}`}></span>
                       <span>Momentum</span>
                     </button>
                     
                     {/* Time Range Buttons */}
-                    <div className="flex gap-2 flex-1 sm:flex-initial">
-                      {(['7d', '30d', '90d'] as const).map((range) => (
-                        <button
-                          key={range}
-                          onClick={() => setTimeRange(range)}
-                          className={`flex-1 sm:flex-initial px-3 py-2 sm:py-1.5 rounded-lg text-xs font-medium transition-all min-h-[44px] sm:min-h-[36px] ${
-                            timeRange === range
-                              ? 'bg-gradient-to-r from-[#49997E] to-[#5eb896] text-white shadow-sm'
-                              : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200'
-                          }`}
-                        >
-                          {range.toUpperCase()}
-                        </button>
-                      ))}
-                    </div>
+                    {(['7d', '30d', '90d'] as const).map((range) => (
+                      <button
+                        key={range}
+                        onClick={() => setTimeRange(range)}
+                        className={`px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                          timeRange === range
+                            ? 'bg-gradient-to-r from-[#49997E] to-[#5eb896] text-white shadow-sm'
+                            : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-200 hover:border-[#49997E]/30'
+                        }`}
+                      >
+                        {range.toUpperCase()}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -508,14 +530,14 @@ export default function ProtocolDetailPage() {
                     <div className="flex items-center gap-2">
                       <div className="w-8 h-0.5 bg-[#49997E] rounded"></div>
                       <span className="text-gray-600">
-                        <strong className="text-gray-900">SPT Score:</strong> Historical self-comparison baseline
+                        <strong className="text-gray-900">SPT Score:</strong> Cross-protocol comparison vs category peers
                       </span>
                     </div>
                     {showMomentum && (
                       <div className="flex items-center gap-2">
                         <div className="w-8 h-0.5 bg-orange-500 rounded"></div>
                         <span className="text-gray-600">
-                          <strong className="text-orange-600">Momentum:</strong> Historical momentum tracking
+                          <strong className="text-orange-600">Momentum:</strong> Historical self-comparison vs own baseline
                         </span>
                       </div>
                     )}
