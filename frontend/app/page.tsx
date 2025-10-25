@@ -137,6 +137,18 @@ export default function Home() {
     const loadData = async () => {
       console.log('🎬 Component mounted, checking for cached data...');
       
+      // Deployment version for cache invalidation
+      const DEPLOYMENT_VERSION = '1.1.0'; // Update this on significant changes
+      const cachedVersion = sessionStorage.getItem('spt-version');
+      
+      // Invalidate cache if deployment version changed
+      if (cachedVersion !== DEPLOYMENT_VERSION) {
+        console.log(`🔄 Deployment updated (${cachedVersion} → ${DEPLOYMENT_VERSION}), clearing cache...`);
+        sessionStorage.removeItem('spt-data');
+        sessionStorage.removeItem('spt-last-updated');
+        sessionStorage.setItem('spt-version', DEPLOYMENT_VERSION);
+      }
+      
       // Try to load from sessionStorage first
       const cached = sessionStorage.getItem('spt-data');
       const cachedTime = sessionStorage.getItem('spt-last-updated');
