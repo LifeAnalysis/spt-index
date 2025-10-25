@@ -12,31 +12,43 @@ const PORT = process.env.PORT || 3000; // Use Railway's PORT env variable
 const CACHE_TTL_MINUTES = 5; // Cache for 5 minutes (real-time data)
 const PROTOCOL_CACHE_TTL_MINUTES = 5; // Cache for 5 minutes
 
-// Protocol list for SPT Index
+// Protocol list for SPT Index (28 total)
 const PROTOCOLS = [
   // DEXs - Ethereum
   'uniswap', 
   'curve-dex', 
   'sushiswap',
   'balancer',
+  'uniswap-v4',
   // DEXs - Multi-chain
   'pancakeswap',
   // DEXs - Solana
   'raydium',
+  'orca-dex',
+  'meteora-dlmm',
   // DEXs - Other L2s/Chains
   'quickswap',
   'aerodrome',
+  'momentum',
   // Lending - Ethereum
   'aave', 
   'compound-v3',
   'makerdao',
   'morpho',
   'spark',
+  'euler-v2',
+  'fluid-lending',
+  'maple',
   // Lending - Other Chains
   'justlend',
   'venus',
   'radiant',
-  'benqi'
+  'benqi',
+  'kamino-lend',
+  // CDP - Collateralized Debt Position
+  'liquity-v1',
+  'crvusd',
+  'liquity-v2'
 ];
 
 // Initialize caches
@@ -158,31 +170,7 @@ app.post('/api/spt/refresh', async (req, res) => {
     console.log('🔄 Force refresh requested - clearing cache...');
     cache.clear();
     
-    const protocols = [
-      // DEXs - Ethereum
-      'uniswap', 
-      'curve-dex', 
-      'sushiswap',
-      'balancer',
-      // DEXs - Multi-chain
-      'pancakeswap',
-      // DEXs - Solana
-      'raydium',
-      // DEXs - Other L2s/Chains
-      'quickswap',
-      'aerodrome',
-      // Lending - Ethereum
-      'aave', 
-      'compound-v3',
-      'makerdao',
-      'morpho',
-      'spark',
-      // Lending - Other Chains
-      'justlend',
-      'venus',
-      'radiant',
-      'benqi'
-    ];
+    const protocols = PROTOCOLS; // Use the same list as main endpoint
     const data = await getSPTIndex(protocols);
     
     // Export summary to CSV (async, don't wait)
