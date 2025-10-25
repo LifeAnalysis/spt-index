@@ -2,10 +2,29 @@ import { fetch } from 'undici';
 import { calculateCohortSPTScore, calculateSelfSPTScore, calculateMomentumTrend, normalizeScores } from './scoring.js';
 import { getLendingMetrics, getDEXMetrics } from './lendingMetrics.js';
 
+// Multi-version protocol aggregation
+// Maps parent protocol name to array of version slugs to aggregate
+export const PROTOCOL_VERSIONS = {
+  'uniswap': {
+    versions: ['uniswap-v2', 'uniswap-v3', 'uniswap-v4'],
+    type: 'dex',
+    displayName: 'Uniswap',
+    logo: 'https://icons.llama.fi/uniswap-v3.png'
+  },
+  'liquity': {
+    versions: ['liquity-v1', 'liquity-v2'],
+    type: 'cdp',
+    displayName: 'Liquity',
+    logo: 'https://icons.llama.fi/liquity-v1.jpg'
+  }
+};
+
 // Protocol categories with their types
 const PROTOCOL_TYPES = {
+  // Multi-version protocols (aggregated)
+  'uniswap': 'dex',      // Aggregates V2, V3, V4
+  'liquity': 'cdp',      // Aggregates V1, V2
   // DEXs - Ethereum
-  'uniswap-v3': 'dex',      // Combined V3+V4 liquidity
   'curve-dex': 'dex',
   'sushiswap': 'dex',
   'balancer': 'dex',
@@ -35,15 +54,15 @@ const PROTOCOL_TYPES = {
   'benqi': 'lending',
   'kamino-lend': 'lending',
   // CDP - Collateralized Debt Position
-  'liquity-v1': 'cdp',
-  'crvusd': 'cdp',
-  'liquity-v2': 'cdp'
+  'crvusd': 'cdp'
 };
 
 // Protocol slug mappings (same as API slugs)
 const PROTOCOL_SLUGS_MAP = {
+  // Multi-version
+  'uniswap': 'uniswap',
+  'liquity': 'liquity',
   // DEXs
-  'uniswap-v3': 'uniswap-v3',
   'curve-dex': 'curve-dex',
   'pancakeswap': 'pancakeswap',
   'sushiswap': 'sushiswap',
@@ -69,9 +88,7 @@ const PROTOCOL_SLUGS_MAP = {
   'benqi': 'benqi',
   'kamino-lend': 'kamino-lend',
   // CDP
-  'liquity-v1': 'liquity-v1',
-  'crvusd': 'crvusd',
-  'liquity-v2': 'liquity-v2'
+  'crvusd': 'crvusd'
 };
 
 
@@ -163,7 +180,211 @@ export function buildHistoricalMetrics(tvlData, feesData, volumeData) {
   };
 }
 
+/**
+ * Aggregate data from multiple protocol versions
+ * Used for protocols like Uniswap (V2+V3+V4) and Liquity (V1+V2)
+ */
+async function getAggregatedProtocolData(parentProtocol) {
+  const versionConfig = PROTOCOL_VERSIONS[parentProtocol];
+  if (!versionConfig) return null;
+  
+  console.log(`\n📦 Aggregating ${versionConfig.displayName} from versions: ${versionConfig.versions.join(', ')}`);
+  
+  // Fetch data for all versions in parallel
+  const versionsData = await Promise.all(
+    versionConfig.versions.map(async (versionSlug) => {
+      try {
+        const [tvlData, fees, volume] = await Promise.all([
+          fetch(`https://api.llama.fi/protocol/${versionSlug}`).then(r => r.json()),
+          fetch(`https://api.llama.fi/summary/fees/${versionSlug}`).then(r => r.json()).catch(() => ({ 
+            total24h: 0, total7d: 0, total30d: 0, change_1d: 0
+          })),
+          fetch(`https://api.llama.fi/summary/dexs/${versionSlug}`).then(r => r.json()).catch(() => ({ 
+            total24h: 0, total7d: 0, total30d: 0 
+          }))
+        ]);
+        
+        // Calculate current TVL
+        const currentTvl = tvlData.currentChainTvls 
+          ? Object.values(tvlData.currentChainTvls).reduce((sum, val) => sum + (val || 0), 0)
+          : 0;
+        
+        console.log(`  ${versionSlug}: TVL=$${currentTvl.toLocaleString()}, Fees=$${fees.total24h.toLocaleString()}, Vol=$${volume.total24h.toLocaleString()}`);
+        
+        return {
+          versionSlug,
+          tvlData,
+          fees,
+          volume,
+          currentTvl
+        };
+      } catch (error) {
+        console.log(`  ${versionSlug}: Not found or error (${error.message})`);
+        return null;
+      }
+    })
+  );
+  
+  // Filter out failed fetches
+  const validVersions = versionsData.filter(v => v !== null);
+  if (validVersions.length === 0) {
+    console.log(`❌ No valid versions found for ${parentProtocol}`);
+    return null;
+  }
+  
+  // Aggregate metrics
+  const aggregatedTvl = validVersions.reduce((sum, v) => sum + v.currentTvl, 0);
+  const aggregatedFees24h = validVersions.reduce((sum, v) => sum + (v.fees.total24h || 0), 0);
+  const aggregatedFees7d = validVersions.reduce((sum, v) => sum + (v.fees.total7d || 0), 0);
+  const aggregatedFees30d = validVersions.reduce((sum, v) => sum + (v.fees.total30d || 0), 0);
+  const aggregatedVolume24h = validVersions.reduce((sum, v) => sum + (v.volume.total24h || 0), 0);
+  const aggregatedVolume7d = validVersions.reduce((sum, v) => sum + (v.volume.total7d || 0), 0);
+  const aggregatedVolume30d = validVersions.reduce((sum, v) => sum + (v.volume.total30d || 0), 0);
+  
+  // Calculate weighted average fee growth
+  const totalFees = validVersions.reduce((sum, v) => sum + (v.fees.total24h || 0), 0);
+  const aggregatedFeeGrowth = totalFees > 0 
+    ? validVersions.reduce((sum, v) => sum + (v.fees.change_1d || 0) * (v.fees.total24h || 0), 0) / totalFees
+    : 0;
+  
+  console.log(`✅ Aggregated ${versionConfig.displayName}: TVL=$${aggregatedTvl.toLocaleString()}, Fees=$${aggregatedFees24h.toLocaleString()}, Vol=$${aggregatedVolume24h.toLocaleString()}`);
+  
+  // Aggregate historical TVL (merge all chainTvls)
+  const aggregatedChainTvls = {};
+  validVersions.forEach(v => {
+    if (v.tvlData.chainTvls) {
+      for (const chain in v.tvlData.chainTvls) {
+        if (!aggregatedChainTvls[chain]) {
+          aggregatedChainTvls[chain] = { tvl: [] };
+        }
+        // Merge TVL arrays by timestamp
+        const chainTvl = v.tvlData.chainTvls[chain]?.tvl || [];
+        chainTvl.forEach(point => {
+          const existing = aggregatedChainTvls[chain].tvl.find(p => p.date === point.date);
+          if (existing) {
+            existing.totalLiquidityUSD = (existing.totalLiquidityUSD || 0) + (point.totalLiquidityUSD || 0);
+          } else {
+            aggregatedChainTvls[chain].tvl.push({ ...point });
+          }
+        });
+      }
+    }
+  });
+  
+  // Create synthetic aggregated protocol data
+  return {
+    name: versionConfig.displayName,
+    logo: versionConfig.logo,
+    slug: parentProtocol,
+    category: validVersions[0].tvlData.category,
+    chainTvls: aggregatedChainTvls,
+    currentChainTvls: {
+      ...Object.fromEntries(Object.keys(aggregatedChainTvls).map(chain => [chain, aggregatedTvl]))
+    },
+    versionsTracked: validVersions.map(v => v.versionSlug),
+    fees: {
+      total24h: aggregatedFees24h,
+      total7d: aggregatedFees7d,
+      total30d: aggregatedFees30d,
+      change_1d: aggregatedFeeGrowth,
+      totalDataChart: [] // Aggregate from versions if needed
+    },
+    volume: {
+      total24h: aggregatedVolume24h,
+      total7d: aggregatedVolume7d,
+      total30d: aggregatedVolume30d,
+      totalDataChart: [] // Aggregate from versions if needed
+    },
+    currentTvl: aggregatedTvl,
+    type: versionConfig.type
+  };
+}
+
 async function getProtocolData(protocol) {
+  // Check if this is a multi-version protocol
+  if (PROTOCOL_VERSIONS[protocol]) {
+    const aggregatedData = await getAggregatedProtocolData(protocol);
+    if (!aggregatedData) return null;
+    
+    // Process aggregated data as a normal protocol
+    const tvlData = {
+      name: aggregatedData.name,
+      logo: aggregatedData.logo,
+      slug: aggregatedData.slug,
+      category: aggregatedData.category,
+      chainTvls: aggregatedData.chainTvls,
+      currentChainTvls: aggregatedData.currentChainTvls
+    };
+    const fees = aggregatedData.fees;
+    const volume = aggregatedData.volume;
+    const currentTvl = aggregatedData.currentTvl;
+    const versionsTracked = aggregatedData.versionsTracked;
+    
+    // Continue with normal processing...
+    const protocolType = aggregatedData.type;
+    const historicalMetrics = buildHistoricalMetrics(tvlData, fees, volume);
+    
+    const now = Math.floor(Date.now() / 1000);
+    const tvl24hAgo = getTvlAtTimestamp(tvlData.chainTvls, now - 86400);
+    const tvl7dAgo = getTvlAtTimestamp(tvlData.chainTvls, now - 604800);
+    const tvl30dAgo = getTvlAtTimestamp(tvlData.chainTvls, now - 2592000);
+    
+    const feeGrowth = fees.change_1d ? parseFloat(fees.change_1d) : 0;
+    
+    // Fetch protocol-specific metrics
+    let currentMetrics;
+    let lendingMetrics = null;
+    
+    if (protocolType === 'lending' || protocolType === 'cdp') {
+      // For multi-version CDP, aggregate lending metrics across versions
+      // (Not implemented yet - would need to fetch each version's lending data)
+      currentMetrics = {
+        borrowVolume: 0,
+        vanillaSupply: 0,
+        utilization: 0,
+        fees: fees.total24h || 0,
+        volume: 0,
+        tvl: currentTvl,
+        feeGrowth: feeGrowth
+      };
+    } else {
+      // DEX metrics
+      const volumeAmount = volume.total24h || 0;
+      const capitalEfficiency = currentTvl > 0 ? volumeAmount / currentTvl : 0;
+      
+      currentMetrics = {
+        volume: volumeAmount,
+        capitalEfficiency,
+        fees: fees.total24h || 0,
+        feeGrowth,
+        tvl: currentTvl
+      };
+    }
+    
+    return {
+      name: tvlData.name,
+      logo: tvlData.logo,
+      slug: tvlData.slug,
+      category: tvlData.category,
+      type: protocolType,
+      currentMetrics,
+      historicalMetrics,
+      lendingMetrics,
+      tvl: currentTvl,
+      tvl24hAgo,
+      tvl7dAgo,
+      tvl30dAgo,
+      fees: fees.total24h || 0,
+      fees7d: fees.total7d || 0,
+      fees30d: fees.total30d || 0,
+      volume: volume.total24h || 0,
+      volume7d: volume.total7d || 0,
+      volume30d: volume.total30d || 0,
+      versionsTracked // Pass version info through
+    };
+  }
+  
+  // Original single-version protocol logic
   try {
     // Fetch current and historical data
     const [tvlData, fees, volume] = await Promise.all([
@@ -485,7 +706,8 @@ export async function getSPTIndex(protocols) {
       change24h,
       change7d,
       change30d,
-      historicalDataPoints: p.historicalMetrics.tvl.length
+      historicalDataPoints: p.historicalMetrics.tvl.length,
+      versionsTracked: p.versionsTracked // Include for multi-version protocols
     };
     
     // Add lending-specific metrics if available
