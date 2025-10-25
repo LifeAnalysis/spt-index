@@ -110,8 +110,10 @@ export default function Home() {
         total: responseData.all?.length || 0
       });
       console.log('📦 Full response data:', responseData);
-      console.log('📋 DEX protocols:', responseData.dex);
-      console.log('📋 Lending protocols:', responseData.lending);
+      console.log('📋 DEX protocols:', responseData.dex?.length);
+      console.log('📋 Lending protocols:', responseData.lending?.length);
+      console.log('📋 CDP protocols:', responseData.cdp?.length);
+      console.log('🦄 Uniswap logo:', responseData.dex?.find((p: any) => p.slug === 'uniswap')?.logo);
       
       // Save to sessionStorage for persistence across navigation
       if (typeof window !== 'undefined') {
@@ -138,8 +140,9 @@ export default function Home() {
       console.log('🎬 Component mounted, checking for cached data...');
       
       // Deployment version for cache invalidation
-      const DEPLOYMENT_VERSION = '1.1.0'; // Update this on significant changes
+      const DEPLOYMENT_VERSION = '1.1.1'; // Update this on significant changes
       const cachedVersion = sessionStorage.getItem('spt-version');
+      console.log(`🔧 Frontend Version: ${DEPLOYMENT_VERSION}, Cached Version: ${cachedVersion}`);
       
       // Invalidate cache if deployment version changed
       if (cachedVersion !== DEPLOYMENT_VERSION) {
