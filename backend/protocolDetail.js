@@ -1,11 +1,11 @@
 import { fetch } from 'undici';
 import { calculateCohortSPTScore, calculateSelfSPTScore, calculateMomentumTrend } from './scoring.js';
-import { buildHistoricalMetrics } from './data.js';
+import { buildHistoricalMetrics, PROTOCOL_VERSIONS } from './data.js';
 import { getLendingMetrics } from './lendingMetrics.js';
 
 const PROTOCOL_TYPES = {
   // DEXs - Ethereum
-  'uniswap': 'dex',
+  'uniswap': 'dex',        // Aggregated: V2 + V3 + V4
   'curve-dex': 'dex',
   'sushiswap': 'dex',
   'balancer': 'dex',
@@ -13,20 +13,30 @@ const PROTOCOL_TYPES = {
   'pancakeswap': 'dex',
   // DEXs - Solana
   'raydium': 'dex',
+  'orca-dex': 'dex',
+  'meteora-dlmm': 'dex',
   // DEXs - Other L2s/Chains
   'quickswap': 'dex',
   'aerodrome': 'dex',
+  'momentum': 'dex',
   // Lending - Ethereum
   'aave': 'lending',
   'compound-v3': 'lending',
   'makerdao': 'lending',
   'morpho': 'lending',
   'spark': 'lending',
+  'euler-v2': 'lending',
+  'fluid-lending': 'lending',
+  'maple': 'lending',
   // Lending - Other Chains
   'justlend': 'lending',
   'venus': 'lending',
   'radiant': 'lending',
-  'benqi': 'lending'
+  'benqi': 'lending',
+  'kamino-lend': 'lending',
+  // CDP - Collateralized Debt Position
+  'liquity': 'cdp',        // Aggregated: V1 + V2
+  'crvusd': 'cdp'
 };
 
 const PROTOCOL_METADATA = {
@@ -118,6 +128,17 @@ const PROTOCOL_METADATA = {
     description: 'Liquidity market protocol on Avalanche',
     website: 'https://benqi.fi',
     twitter: '@BenqiFinance'
+  },
+  // CDP
+  'liquity': {
+    description: 'Decentralized borrowing protocol backed by ETH collateral',
+    website: 'https://www.liquity.org',
+    twitter: '@LiquityProtocol'
+  },
+  'crvusd': {
+    description: 'Stablecoin by Curve Finance with self-liquidating mechanism',
+    website: 'https://crvusd.curve.fi',
+    twitter: '@CurveFinance'
   }
 };
 
@@ -389,6 +410,9 @@ export async function getProtocolDetail(protocolSlug) {
       };
     }
     
+    // Check if this is a multi-version protocol
+    const versionConfig = PROTOCOL_VERSIONS[protocolSlug];
+    
     return {
       slug: protocolSlug,
       name: tvlData.name,
@@ -398,6 +422,7 @@ export async function getProtocolDetail(protocolSlug) {
       website: metadata.website || tvlData.url || '',
       twitter: metadata.twitter || (tvlData.twitter ? `@${tvlData.twitter}` : ''),
       logo: tvlData.logo || '',
+      versionsTracked: versionConfig?.versions, // Include for multi-version protocols
       current: currentData,
       historicalMetrics: {
         fees: historicalMetrics.fees,

@@ -36,6 +36,7 @@ interface ProtocolDetail {
   website?: string;
   twitter?: string;
   logo?: string;
+  versionsTracked?: string[]; // For multi-version protocols (e.g., Uniswap V2+V3+V4)
   current: {
     tvl: number;
     fees: number;
@@ -323,7 +324,17 @@ export default function ProtocolDetailPage() {
           <div className="bg-gradient-to-r from-[#49997E]/10 via-blue-50 to-purple-50 rounded-lg sm:rounded-xl border border-gray-200 shadow-sm px-3 sm:px-8 py-3 sm:py-6">
             {/* Title Row */}
             <div className="flex items-center justify-between gap-2 mb-2 sm:mb-3">
-              <h1 className="text-lg sm:text-3xl lg:text-4xl font-bold text-gray-900 truncate">{data.name}</h1>
+              <div>
+                <h1 className="text-lg sm:text-3xl lg:text-4xl font-bold text-gray-900 truncate">{data.name}</h1>
+                {data.versionsTracked && data.versionsTracked.length > 0 && (
+                  <p className="text-xs sm:text-sm text-gray-600 mt-0.5 sm:mt-1">
+                    Tracking: {data.versionsTracked.map((v: string) => {
+                      const versionPart = v.split('-').pop() || v;
+                      return versionPart.toUpperCase();
+                    }).join(', ')}
+                  </p>
+                )}
+              </div>
               <span className="px-2 py-0.5 sm:px-3 sm:py-1 bg-white/80 text-gray-700 rounded text-[10px] sm:text-sm font-medium border border-gray-200 whitespace-nowrap flex-shrink-0">
                 {data.type === 'dex' ? '🔄 DEX' : (data.type === 'cdp' ? '🏦 CDP' : '💰 Lending')}
               </span>
