@@ -46,6 +46,7 @@ interface Protocol {
 interface SPTData {
   dex: Protocol[];
   lending: Protocol[];
+  cdp?: Protocol[];
   all: Protocol[];
   _metadata?: {
     cached: boolean;
