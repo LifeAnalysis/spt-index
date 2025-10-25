@@ -98,8 +98,15 @@ export default function Home() {
       setError(null);
       
       const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
-      console.log('📡 Fetching from:', RAILWAY_API);
-      const res = await fetch(RAILWAY_API);
+      // Add cache-busting timestamp to bypass HTTP caching
+      const cacheBuster = `?t=${Date.now()}`;
+      console.log('📡 Fetching from:', RAILWAY_API + cacheBuster);
+      const res = await fetch(RAILWAY_API + cacheBuster, {
+        cache: 'no-store', // Disable Next.js caching
+        headers: {
+          'Cache-Control': 'no-cache' // Request fresh data from server
+        }
+      });
       
       console.log('📊 Response status:', res.status, res.ok);
       if (!res.ok) throw new Error('Failed to fetch data');
@@ -140,7 +147,7 @@ export default function Home() {
       console.log('🎬 Component mounted, checking for cached data...');
       
       // Deployment version for cache invalidation
-      const DEPLOYMENT_VERSION = '1.1.1'; // Update this on significant changes
+      const DEPLOYMENT_VERSION = '1.1.2'; // Force cache clear - backend data refreshed
       const cachedVersion = sessionStorage.getItem('spt-version');
       console.log(`🔧 Frontend Version: ${DEPLOYMENT_VERSION}, Cached Version: ${cachedVersion}`);
       
@@ -162,7 +169,7 @@ export default function Home() {
           const parsedData = JSON.parse(cached);
           const lastUpdateTime = new Date(cachedTime);
           const cacheAge = Date.now() - lastUpdateTime.getTime();
-          const STALE_TIME = 5 * 60 * 1000; // 5 minutes
+          const STALE_TIME = 30 * 1000; // 30 seconds - reduced for faster updates
           
           // Show cached data immediately
           setData(parsedData);
@@ -170,11 +177,9 @@ export default function Home() {
           setLoading(false);
           console.log(`✅ Showing cached data (${Math.floor(cacheAge / 1000)}s old)`);
           
-          // If cache is stale, fetch fresh data in background
-          if (cacheAge > STALE_TIME) {
-            console.log('🔄 Cache is stale, fetching fresh data in background...');
-            await fetchData();
-          }
+          // Always fetch fresh data in background to ensure latest
+          console.log('🔄 Fetching fresh data in background...');
+          await fetchData();
         } catch (e) {
           console.error('❌ Failed to parse cached data:', e);
           console.log('🚀 Fetching fresh data...');
