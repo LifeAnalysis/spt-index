@@ -4,6 +4,10 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InfoTooltip from './components/InfoTooltip';
 
+// Force dynamic rendering - prevent Vercel from caching as static
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 interface LendingMetrics {
   borrowVolume: number;
   supplyVolume: number;

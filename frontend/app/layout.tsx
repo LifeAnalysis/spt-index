@@ -12,6 +12,10 @@ export const metadata: Metadata = {
   description: "DeFi Fundamentals Live — Performance Scores Based on On-Chain Metrics",
 };
 
+// Force dynamic rendering for entire app
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function RootLayout({
   children,
 }: Readonly<{
