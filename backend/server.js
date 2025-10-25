@@ -15,11 +15,11 @@ const PROTOCOL_CACHE_TTL_MINUTES = 5; // Cache for 5 minutes
 // Protocol list for SPT Index (28 total)
 const PROTOCOLS = [
   // DEXs - Ethereum
-  'uniswap', 
+  'uniswap-v3',    // Dominant version
+  'uniswap-v4',    // Latest version
   'curve-dex', 
   'sushiswap',
   'balancer',
-  'uniswap-v4',
   // DEXs - Multi-chain
   'pancakeswap',
   // DEXs - Solana

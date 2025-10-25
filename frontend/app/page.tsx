@@ -205,7 +205,13 @@ export default function Home() {
   };
 
   const formatChange = (change: number | null | undefined) => {
-    if (change === null || change === undefined || isNaN(change)) return <span className="text-gray-400">—</span>;
+    if (change === null || change === undefined || isNaN(change)) {
+      return (
+        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">
+          NEW
+        </span>
+      );
+    }
     const isPositive = change >= 0;
     const color = isPositive ? 'text-emerald-600' : 'text-rose-600';
     const arrow = isPositive ? '▲' : '▼';
