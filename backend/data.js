@@ -9,13 +9,13 @@ export const PROTOCOL_VERSIONS = {
     versions: ['uniswap-v2', 'uniswap-v3', 'uniswap-v4'],
     type: 'dex',
     displayName: 'Uniswap',
-    logo: 'https://icons.llama.fi/uniswap-v3.png'
+    logo: 'https://icons.llama.fi/uniswap.jpg' // Official Uniswap unicorn logo
   },
   'liquity': {
     versions: ['liquity-v1', 'liquity-v2'],
     type: 'cdp',
     displayName: 'Liquity',
-    logo: 'https://icons.llama.fi/liquity-v1.jpg'
+    logo: 'https://icons.llama.fi/liquity.jpg' // Official Liquity logo
   }
 };
 
