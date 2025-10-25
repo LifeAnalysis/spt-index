@@ -404,29 +404,61 @@ export async function getSPTIndex(protocols) {
     let score30dAgo = null;
     
     if (cohortMetrics && p.historicalMetrics && p.historicalMetrics.tvl.length >= 30) {
-      // Use cohort methodology for historical comparisons
-      const historicalMetrics24h = {
-        fees: p.currentMetrics.fees,
-        volume: p.currentMetrics.volume,
-        tvl: p.tvl24hAgo,
-        feeGrowth: 0 // Historical fee growth not available for past periods
-      };
+      // Build historical metrics based on protocol type
+      let historicalMetrics24h, historicalMetrics7d, historicalMetrics30d;
+      
+      if (p.type === 'lending' || p.type === 'cdp') {
+        // For lending/CDP: estimate historical borrow/vanilla from TVL ratios
+        const currentUtilization = p.currentMetrics.utilization || 0;
+        const currentVanillaRatio = p.lendingMetrics ? 
+          (p.lendingMetrics.vanillaSupplyUsd / p.lendingMetrics.totalSupplyUsd) || 0 : 0;
+        
+        historicalMetrics24h = {
+          borrowVolume: p.tvl24hAgo * currentUtilization,
+          vanillaSupply: p.tvl24hAgo * currentVanillaRatio,
+          utilization: currentUtilization,
+          fees: p.currentMetrics.fees
+        };
+        
+        historicalMetrics7d = {
+          borrowVolume: p.tvl7dAgo * currentUtilization,
+          vanillaSupply: p.tvl7dAgo * currentVanillaRatio,
+          utilization: currentUtilization,
+          fees: p.fees7d / 7
+        };
+        
+        historicalMetrics30d = {
+          borrowVolume: p.tvl30dAgo * currentUtilization,
+          vanillaSupply: p.tvl30dAgo * currentVanillaRatio,
+          utilization: currentUtilization,
+          fees: p.fees30d / 30
+        };
+      } else {
+        // For DEX: use volume, capitalEfficiency, fees, feeGrowth
+        historicalMetrics24h = {
+          volume: p.currentMetrics.volume,
+          capitalEfficiency: p.tvl24hAgo > 0 ? p.currentMetrics.volume / p.tvl24hAgo : 0,
+          fees: p.currentMetrics.fees,
+          feeGrowth: 0
+        };
+        
+        historicalMetrics7d = {
+          volume: p.volume7d / 7,
+          capitalEfficiency: p.tvl7dAgo > 0 ? (p.volume7d / 7) / p.tvl7dAgo : 0,
+          fees: p.fees7d / 7,
+          feeGrowth: 0
+        };
+        
+        historicalMetrics30d = {
+          volume: p.volume30d / 30,
+          capitalEfficiency: p.tvl30dAgo > 0 ? (p.volume30d / 30) / p.tvl30dAgo : 0,
+          fees: p.fees30d / 30,
+          feeGrowth: 0
+        };
+      }
+      
       score24hAgo = calculateCohortSPTScore(historicalMetrics24h, cohortMetrics, p.type);
-      
-      const historicalMetrics7d = {
-        fees: p.fees7d / 7,
-        volume: p.volume7d / 7,
-        tvl: p.tvl7dAgo,
-        feeGrowth: 0
-      };
       score7dAgo = calculateCohortSPTScore(historicalMetrics7d, cohortMetrics, p.type);
-      
-      const historicalMetrics30d = {
-        fees: p.fees30d / 30,
-        volume: p.volume30d / 30,
-        tvl: p.tvl30dAgo,
-        feeGrowth: 0
-      };
       score30dAgo = calculateCohortSPTScore(historicalMetrics30d, cohortMetrics, p.type);
     }
     
