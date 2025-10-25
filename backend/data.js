@@ -5,8 +5,7 @@ import { getLendingMetrics, getDEXMetrics } from './lendingMetrics.js';
 // Protocol categories with their types
 const PROTOCOL_TYPES = {
   // DEXs - Ethereum
-  'uniswap-v3': 'dex',      // Dominant version ($2.78B TVL)
-  'uniswap-v4': 'dex',      // Latest version ($1.43B TVL)
+  'uniswap-v3': 'dex',      // Combined V3+V4 liquidity
   'curve-dex': 'dex',
   'sushiswap': 'dex',
   'balancer': 'dex',
@@ -45,7 +44,6 @@ const PROTOCOL_TYPES = {
 const PROTOCOL_SLUGS_MAP = {
   // DEXs
   'uniswap-v3': 'uniswap-v3',
-  'uniswap-v4': 'uniswap-v4',
   'curve-dex': 'curve-dex',
   'pancakeswap': 'pancakeswap',
   'sushiswap': 'sushiswap',

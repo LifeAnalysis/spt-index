@@ -12,11 +12,10 @@ const PORT = process.env.PORT || 3000; // Use Railway's PORT env variable
 const CACHE_TTL_MINUTES = 1440; // Cache for 24 hours (1440 minutes)
 const PROTOCOL_CACHE_TTL_MINUTES = 1440; // Cache for 24 hours
 
-// Protocol list for SPT Index (28 total)
+// Protocol list for SPT Index (27 total)
 const PROTOCOLS = [
   // DEXs - Ethereum
-  'uniswap-v3',    // Dominant version
-  'uniswap-v4',    // Latest version
+  'uniswap-v3',    // Combined V3+V4 liquidity
   'curve-dex', 
   'sushiswap',
   'balancer',
