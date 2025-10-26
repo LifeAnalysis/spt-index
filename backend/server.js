@@ -72,11 +72,12 @@ app.use(compression({
   }
 }));
 
-// Enable CORS for local development
+// Enable CORS for all origins
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', '*');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, If-None-Match');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, If-None-Match, Cache-Control');
   res.header('Access-Control-Expose-Headers', 'ETag, Cache-Control');
+  res.header('Access-Control-Allow-Methods', 'GET, OPTIONS');
   next();
 });
 
