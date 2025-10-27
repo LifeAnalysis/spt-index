@@ -711,26 +711,48 @@ export default function Home() {
       <div className="container mx-auto px-4 sm:px-6 py-6">
         {/* Page Title & Description */}
         <header className="mb-6">
-          <h2 className="text-h1 text-gray-900 mb-2">DeFi Protocol Rankings</h2>
+          <h2 className="text-h1 text-gray-900 mb-2">Beyond TVL: A Performance-Based Scoreboard</h2>
           <p className="text-body text-gray-600 mb-3">
-            <strong>SPT Scores</strong> quantify protocol operational efficiency through statistical analysis of real-time on-chain metrics (transaction fees, trading volume, total value locked). 
-            Analogous to credit ratings (AAA to B), higher scores reflect superior capital efficiency and operational health.
+            TVL measures capital attraction, not productivity. A protocol can show billions in TVL while most of it sits idle or is recursively looped to inflate on-chain optics. 
+            <strong> SPT quantifies what TVL hides</strong>: actual activity, efficiency, and revenue generation.
           </p>
           
           {/* Mobile-optimized explanation boxes */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-2 sm:space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
-              <span className="text-blue-600 font-bold text-body-sm sm:min-w-[90px]">SPT Score:</span>
-              <p className="text-body-sm text-gray-700">
-                Cross-protocol comparative metric utilizing Z-score normalization. Each protocol is evaluated against its peer cohort 
-                <strong> within the same functional category</strong> (decentralized exchanges compared to other DEXs, lending protocols compared to other lending platforms).
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3">
+            <div>
+              <h3 className="text-body font-bold text-blue-900 mb-1.5">How SPT Works</h3>
+              <p className="text-body-sm text-gray-700 mb-2">
+                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>—DEXs compete with DEXs, lending platforms with lending platforms. 
+                Metrics are standardized over a 90-day window using z-scores, enabling fair comparison across sizes and conditions.
               </p>
             </div>
-            <div className="flex flex-col sm:flex-row sm:items-start gap-2 sm:gap-3">
-              <span className="text-blue-600 font-bold text-body-sm sm:min-w-[90px]">Trend:</span>
-              <p className="text-body-sm text-gray-700">
-                Intra-protocol temporal analysis comparing current performance against the protocol's <strong>own 90-day rolling historical baseline</strong> using Z-score methodology.
-              </p>
+            
+            <div className="grid sm:grid-cols-2 gap-3">
+              <div className="bg-white rounded-lg p-3 border border-blue-100">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-lg">🏆</span>
+                  <span className="text-body-sm font-bold text-gray-900">SPT Score</span>
+                </div>
+                <p className="text-body-sm text-gray-700">
+                  Cross-protocol ranking. A smaller, efficient protocol can outrank a larger, underperforming one.
+                </p>
+                <p className="text-caption text-gray-600 mt-1 italic">
+                  Example: $2B TVL at 60% utilization beats $10B at 10% utilization.
+                </p>
+              </div>
+              
+              <div className="bg-white rounded-lg p-3 border border-blue-100">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <span className="text-lg">📈</span>
+                  <span className="text-body-sm font-bold text-gray-900">Trend</span>
+                </div>
+                <p className="text-body-sm text-gray-700">
+                  Self-comparison. Is this protocol's efficiency improving or declining vs. its own 90-day baseline?
+                </p>
+                <p className="text-caption text-gray-600 mt-1 italic">
+                  Shows operational momentum, not just static rank.
+                </p>
+              </div>
             </div>
           </div>
         </header>
@@ -822,21 +844,21 @@ export default function Home() {
               {renderProtocolTable(
                 data.dex,
                 'DEX Protocols',
-                'Z-score normalized ranking: Trading Volume 40%, Capital Efficiency 30%, Fees 20%, Fee Growth 10%',
+                'Ranked by capital efficiency: volume turnover (40%), capital efficiency ratio (30%), fee generation (20%), growth momentum (10%)',
                 '🔄'
               )}
               
               {renderProtocolTable(
                 data.lending,
                 'Lending Protocols',
-                'Z-score normalized ranking: Borrow Volume 40%, Vanilla Assets 25%, Utilization 20%, Fees 15%',
+                'Ranked by utilization: borrow demand (40%), vanilla asset supply (25%), utilization rate (20%), fee revenue (15%)',
                 '💰'
               )}
               
               {data.cdp && data.cdp.length > 0 && renderProtocolTable(
                 data.cdp,
                 'CDP Protocols (Stablecoins)',
-                'Z-score normalized ranking: Minted Stablecoin 40%, Blue-chip Collateral 30%, Utilization 20%, Fees 10%',
+                'Ranked by stablecoin adoption: minted supply (40%), blue-chip collateral (30%), utilization (20%), fees (10%)',
                 '🏦'
               )}
             </section>
@@ -856,9 +878,9 @@ export default function Home() {
           
           <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
             <div className="bg-gradient-to-r from-[#49997E]/10 to-blue-50 px-4 sm:px-6 py-4 border-b border-gray-200">
-              <h4 className="text-lg sm:text-xl font-bold text-gray-900">SPT Scoring Framework</h4>
+              <h4 className="text-lg sm:text-xl font-bold text-gray-900">How We Calculate SPT Scores</h4>
               <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                Multi-stage quantitative model integrating standardized statistical normalization, protocol-specific weighting coefficients, and adaptive recalibration mechanisms
+                A three-step process that turns raw on-chain data into fair, category-specific performance scores
               </p>
             </div>
 
@@ -868,19 +890,19 @@ export default function Home() {
                 <div className="border-l-4 border-[#49997E] pl-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-[#49997E] text-white flex items-center justify-center text-sm font-bold flex-shrink-0">1</div>
-                    <h5 className="font-bold text-gray-900 text-sm">Statistical Normalization</h5>
+                    <h5 className="font-bold text-gray-900 text-sm">Level the Playing Field</h5>
                     <InfoTooltip 
-                      content="converts raw metrics (volume, fees, utilization, capital efficiency, vanilla assets) to z-scores, then applies sigmoid function to map values 0-1. removes scale differences and dampens outliers."
+                      content="z-score normalization converts raw metrics to standard deviations from mean. a $10M protocol and $10B protocol can be compared fairly based on efficiency, not just size."
                       position="bottom"
                       maxWidth="600px"
                     />
                   </div>
                   <p className="text-xs text-gray-600 mb-3">
-                    Raw metrics undergo <strong>Z-score transformation</strong> over a 90-day rolling temporal window to achieve unit-invariant standardization.
+                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias—a small, efficient protocol can outrank a large, inefficient one.
                   </p>
-                  <div className="bg-gray-50 rounded p-2 text-xs font-mono text-gray-700 space-y-1">
-                    <div>z = (x - μ) / σ</div>
-                    <div>S(z) = 1 / (1 + e<sup>-z</sup>)</div>
+                  <div className="bg-gray-50 rounded p-2 text-xs text-gray-700">
+                    <div className="font-mono mb-1">z = (x - μ) / σ</div>
+                    <div className="text-gray-600">Measures how many standard deviations above/below average</div>
                   </div>
                 </div>
 
@@ -888,28 +910,28 @@ export default function Home() {
                 <div className="border-l-4 border-blue-500 pl-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-blue-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">2</div>
-                    <h5 className="font-bold text-gray-900 text-sm">Weighted Aggregation</h5>
+                    <h5 className="font-bold text-gray-900 text-sm">Weight What Matters</h5>
                     <InfoTooltip 
-                      content="combines normalized metrics with protocol-specific weights. dex prioritizes trading volume + capital efficiency, lending prioritizes borrow volume + vanilla assets, cdp prioritizes minted stablecoins + blue-chip collateral."
+                      content="different protocol types have different success metrics. dexs optimize for volume turnover, lending for borrow demand, cdps for stablecoin adoption. weights reflect what drives value in each category."
                       position="bottom"
                       maxWidth="600px"
                     />
                   </div>
                   <p className="text-xs text-gray-600 mb-3">
-                    Category-specific weighting coefficients reflect fundamental operational characteristics and value drivers.
+                    Each category uses <strong>custom weights</strong> for what matters most. DEXs are judged on capital efficiency, lending on borrow demand, CDPs on stablecoin minting.
                   </p>
                   <div className="space-y-1.5 text-xs">
                     <div className="bg-blue-50 rounded px-2 py-1.5">
-                      <div className="font-semibold text-gray-700">DEX</div>
-                      <div className="text-gray-600">Vol:40% CapEff:30% Fees:20% FG:10%</div>
+                      <div className="font-semibold text-gray-700">DEX Performance</div>
+                      <div className="text-gray-600">Volume 40% • Cap Efficiency 30% • Fees 20% • Growth 10%</div>
                     </div>
                     <div className="bg-emerald-50 rounded px-2 py-1.5">
-                      <div className="font-semibold text-gray-700">Lending</div>
-                      <div className="text-gray-600">Borrow:40% Vanilla:25% Util:20% Fees:15%</div>
+                      <div className="font-semibold text-gray-700">Lending Performance</div>
+                      <div className="text-gray-600">Borrows 40% • Vanilla Assets 25% • Utilization 20% • Fees 15%</div>
                     </div>
                     <div className="bg-purple-50 rounded px-2 py-1.5">
-                      <div className="font-semibold text-gray-700">CDP (Stablecoins)</div>
-                      <div className="text-gray-600">Minted:40% Collateral:30% Util:20% Fees:10%</div>
+                      <div className="font-semibold text-gray-700">CDP Performance</div>
+                      <div className="text-gray-600">Minted 40% • Blue-chip Collateral 30% • Util 20% • Fees 10%</div>
                     </div>
                   </div>
                 </div>
@@ -918,18 +940,19 @@ export default function Home() {
                 <div className="border-l-4 border-amber-500 pl-4">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-8 h-8 rounded-full bg-amber-500 text-white flex items-center justify-center text-sm font-bold flex-shrink-0">3</div>
-                    <h5 className="font-bold text-gray-900 text-sm">Relative Scoring</h5>
+                    <h5 className="font-bold text-gray-900 text-sm">Grade on a Curve</h5>
                     <InfoTooltip 
-                      content="normalizes weighted scores to 0-1 range relative to category peers. enables direct comparison within dex or lending groups."
+                      content="final scores are rated aaa to b, like credit ratings. compares each protocol to its category peers, not the entire market. a top dex and top lender both get high scores despite different business models."
                       position="bottom"
                       maxWidth="600px"
                     />
                   </div>
                   <p className="text-xs text-gray-600 mb-3">
-                    Min-max normalization transforms weighted composite scores to [0,1] interval relative to peer cohort boundaries.
+                    Scores are <strong>ranked within categories</strong>, like grading on a curve. DEXs compete with DEXs, not lenders. Ratings (AAA to B) show where each protocol stands among peers.
                   </p>
-                  <div className="bg-gray-50 rounded p-2 text-xs font-mono text-gray-700">
-                    <div>score = (S - min) / (max - min)</div>
+                  <div className="bg-gray-50 rounded p-2 text-xs text-gray-700 space-y-1">
+                    <div className="font-semibold text-[#49997E]">AAA: Top 10% performers</div>
+                    <div className="text-gray-600">Consistently high efficiency, strong fundamentals</div>
                   </div>
                 </div>
               </div>
