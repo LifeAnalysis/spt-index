@@ -611,9 +611,9 @@ export default function Home() {
           <div className="flex md:hidden justify-between items-center">
             <div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                Protocol Performance Analytics
+                SPT Index
               </h1>
-              <p className="text-[10px] text-gray-500">SPT Index</p>
+              <p className="text-[10px] text-gray-500">Protocol Performance Analytics</p>
             </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -672,9 +672,9 @@ export default function Home() {
           <div className="hidden md:flex justify-between items-center">
             <div>
               <h1 className="text-h3 font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                Protocol Performance Analytics
+                SPT Index
               </h1>
-              <p className="text-caption text-gray-500">SPT Index</p>
+              <p className="text-caption text-gray-500">Protocol Performance Analytics</p>
             </div>
             <div className="flex items-center gap-4">
               {data?._metadata && (
