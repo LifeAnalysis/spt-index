@@ -313,6 +313,9 @@ export default function Home() {
     const totalVolume = data.all.reduce((sum, p) => sum + p.volume, 0);
     const avgScore = data.all.reduce((sum, p) => sum + p.score, 0) / data.all.length;
     
+    // Calculate capital efficiency: annualized fee yield
+    const capitalEfficiency = totalTVL > 0 ? (totalFees / totalTVL) * 365 * 100 : 0;
+    
     const scores24h = data.all.filter(p => p.change24h !== null);
     const positiveMovers24h = scores24h.filter(p => p.change24h! > 0).length;
     
@@ -320,6 +323,7 @@ export default function Home() {
       totalTVL,
       totalFees,
       totalVolume,
+      capitalEfficiency,
       avgScore,
       protocolCount: data.all.length,
       positiveMovers24h,
@@ -810,11 +814,11 @@ export default function Home() {
 
                 <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Aggregate TVL</div>
-                    <div className="text-xl sm:text-h2">💰</div>
+                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Capital Efficiency</div>
+                    <div className="text-xl sm:text-h2">⚡</div>
                   </div>
-                  <div className="text-score-lg text-gray-900">{formatCurrency(metrics.totalTVL)}</div>
-                  <div className="text-caption text-gray-500 mt-1">Total value locked</div>
+                  <div className="text-score-lg text-[#49997E]">{metrics.capitalEfficiency.toFixed(2)}%</div>
+                  <div className="text-caption text-gray-500 mt-1">Annualized fee yield</div>
                 </div>
 
                 <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
