@@ -611,9 +611,9 @@ export default function Home() {
           <div className="flex md:hidden justify-between items-center">
             <div>
               <h1 className="text-lg font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                SPT Index
+                Protocol Performance Analytics
               </h1>
-              <p className="text-[10px] text-gray-500">Protocol Analytics</p>
+              <p className="text-[10px] text-gray-500">SPT Index</p>
             </div>
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -672,9 +672,9 @@ export default function Home() {
           <div className="hidden md:flex justify-between items-center">
             <div>
               <h1 className="text-h3 font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                SPT Index
+                Protocol Performance Analytics
               </h1>
-              <p className="text-caption text-gray-500">Protocol Performance Analytics</p>
+              <p className="text-caption text-gray-500">SPT Index</p>
             </div>
             <div className="flex items-center gap-4">
               {data?._metadata && (
@@ -806,11 +806,11 @@ export default function Home() {
 
                 <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Avg SPT Score</div>
-                    <div className="text-xl sm:text-h2">📈</div>
+                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">24h Volume</div>
+                    <div className="text-xl sm:text-h2">📊</div>
                   </div>
-                  <div className="text-score-lg text-[#49997E]">{formatScore(metrics.avgScore)}</div>
-                  <div className="text-caption text-gray-500 mt-1">Market average</div>
+                  <div className="text-score-lg text-gray-900">{formatCurrency(metrics.totalVolume)}</div>
+                  <div className="text-caption text-gray-500 mt-1">Trading activity</div>
                 </div>
               </div>
             </section>
