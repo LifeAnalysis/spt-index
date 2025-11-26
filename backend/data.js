@@ -53,8 +53,18 @@ const PROTOCOL_TYPES = {
   'radiant': 'lending',
   'benqi': 'lending',
   'kamino-lend': 'lending',
+  'jupiter-lend': 'lending',
   // CDP - Collateralized Debt Position
-  'crvusd': 'cdp'
+  'crvusd': 'cdp',
+  'sky-lending': 'cdp',
+  'lista-cdp': 'cdp',
+  'avalon-usda': 'cdp',
+  // Liquid Staking
+  'lido': 'liquid-staking',
+  'eigenlayer': 'liquid-staking',
+  'ether.fi-stake': 'liquid-staking',
+  'rocket-pool': 'liquid-staking',
+  'jito-liquid-staking': 'liquid-staking'
 };
 
 // Protocol slug mappings (same as API slugs)
@@ -87,8 +97,18 @@ const PROTOCOL_SLUGS_MAP = {
   'radiant': 'radiant',
   'benqi': 'benqi',
   'kamino-lend': 'kamino-lend',
+  'jupiter-lend': 'jupiter-lend',
   // CDP
-  'crvusd': 'crvusd'
+  'crvusd': 'crvusd',
+  'sky-lending': 'sky-lending',
+  'lista-cdp': 'lista-cdp',
+  'avalon-usda': 'avalon-usda',
+  // Liquid Staking
+  'lido': 'lido',
+  'eigenlayer': 'eigenlayer',
+  'ether.fi-stake': 'ether.fi-stake',
+  'rocket-pool': 'rocket-pool',
+  'jito-liquid-staking': 'jito-liquid-staking'
 };
 
 
@@ -750,10 +770,16 @@ export async function getSPTIndex(protocols) {
     .map(p => ({ ...p, score: p.rawScore }))
     .sort((a, b) => b.score - a.score);
   
+  const liquidStakingResults = scored
+    .filter(p => p.type === 'liquid-staking')
+    .map(p => ({ ...p, score: p.rawScore }))
+    .sort((a, b) => b.score - a.score);
+  
   return {
     dex: dexResults,
     lending: lendingResults,
     cdp: cdpResults,
-    all: [...dexResults, ...lendingResults, ...cdpResults].sort((a, b) => b.score - a.score)
+    'liquid-staking': liquidStakingResults,
+    all: [...dexResults, ...lendingResults, ...cdpResults, ...liquidStakingResults].sort((a, b) => b.score - a.score)
   };
 }
