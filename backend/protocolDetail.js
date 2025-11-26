@@ -36,7 +36,16 @@ const PROTOCOL_TYPES = {
   'kamino-lend': 'lending',
   // CDP - Collateralized Debt Position
   'liquity': 'cdp',        // Aggregated: V1 + V2
-  'crvusd': 'cdp'
+  'crvusd': 'cdp',
+  'sky-lending': 'cdp',
+  'lista-cdp': 'cdp',
+  'avalon-usda': 'cdp',
+  // Liquid Staking
+  'lido': 'liquid-staking',
+  'eigenlayer': 'liquid-staking',
+  'ether.fi-stake': 'liquid-staking',
+  'rocket-pool': 'liquid-staking',
+  'jito-liquid-staking': 'liquid-staking'
 };
 
 const PROTOCOL_METADATA = {
@@ -139,6 +148,32 @@ const PROTOCOL_METADATA = {
     description: 'Stablecoin by Curve Finance with self-liquidating mechanism',
     website: 'https://crvusd.curve.fi',
     twitter: '@CurveFinance'
+  },
+  // Liquid Staking
+  'lido': {
+    description: 'Liquid staking solution for Ethereum 2.0, providing stETH tokens',
+    website: 'https://lido.fi',
+    twitter: '@LidoFinance'
+  },
+  'eigenlayer': {
+    description: 'EigenLayer is a protocol built on Ethereum that introduces restaking, a new primitive in cryptoeconomic security. This primitive enables the reuse of ETH on the consensus layer',
+    website: 'https://www.eigenlayer.xyz',
+    twitter: '@eigenlayer'
+  },
+  'ether.fi-stake': {
+    description: 'Decentralized liquid staking protocol with non-custodial staking',
+    website: 'https://ether.fi',
+    twitter: '@ether_fi'
+  },
+  'rocket-pool': {
+    description: 'Decentralized Ethereum staking protocol with rETH liquid staking token',
+    website: 'https://rocketpool.net',
+    twitter: '@Rocket_Pool'
+  },
+  'jito-liquid-staking': {
+    description: 'JitoSOL is the first liquid staking derivative on Solana to include MEV rewards. Tracks the price of SOL while accruing staking and MEV rewards. Yield is accrued in the price so it will steadily appreciate vs. SOL',
+    website: 'https://www.jito.network',
+    twitter: '@jito_sol'
   }
 };
 
