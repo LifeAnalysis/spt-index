@@ -113,7 +113,7 @@ export default function ProtocolDetailPage() {
         <h2 className="text-xl font-bold text-gray-900 mb-2">Protocol Not Found</h2>
         <button onClick={() => router.push('/')} className="text-[#49997E] hover:underline">
           Back to Dashboard
-        </button>
+            </button>
       </div>
     );
   }
@@ -154,13 +154,13 @@ export default function ProtocolDetailPage() {
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
         <div className="container mx-auto px-4 sm:px-6 py-3">
           <div className="flex justify-between items-center">
-            <button
-              onClick={() => router.push('/')}
+              <button
+                onClick={() => router.push('/')}
               className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors group"
-            >
+              >
               <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
-              <span className="text-sm font-medium">Dashboard</span>
-            </button>
+                <span className="text-sm font-medium">Dashboard</span>
+              </button>
             <h1 className="text-lg font-bold text-gray-900">SPT Index</h1>
             <button
               onClick={() => router.push('/about')}
@@ -211,18 +211,78 @@ export default function ProtocolDetailPage() {
                   </div>
                 )}
                 <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
-              </div>
-              
-              {data.description && (
-                <p className="text-sm text-gray-600 leading-relaxed mb-6 border-b border-gray-100 pb-6">
+            </div>
+
+            {data.description && (
+                <p className="text-sm text-gray-600 leading-relaxed mb-4">
                   {data.description}
                 </p>
+            )}
+
+              {/* Website & Twitter Links */}
+            {(data.website || data.twitter) && (
+                <div className="flex items-center gap-3 mb-4">
+                {data.website && (
+                  <a 
+                    href={data.website} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                      className="text-xs text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-1.5 hover:underline transition-colors"
+                  >
+                      <span>🌐</span> Website
+                  </a>
+                )}
+                {data.twitter && (
+                  <a 
+                    href={data.twitter.startsWith('http') ? data.twitter : `https://twitter.com/${data.twitter.replace('@', '')}`} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                      className="text-xs text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-1.5 hover:underline transition-colors"
+                  >
+                      <span>🐦</span> Twitter
+                  </a>
+                )}
+              </div>
+            )}
+            
+              {/* Growth Momentum Indicator */}
+              {data.current.momentum && (
+                <div className="mb-4 pb-4 border-b border-gray-100">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">
+                      {data.current.momentum === 'growing' && '📈'}
+                      {data.current.momentum === 'declining' && '📉'}
+                      {data.current.momentum === 'stable' && '➡️'}
+                    </span>
+                    <div>
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-medium">Recent Momentum</div>
+                      <div className={`text-sm font-bold capitalize ${
+                        data.current.momentum === 'growing' ? 'text-emerald-600' :
+                        data.current.momentum === 'declining' ? 'text-rose-600' : 'text-blue-600'
+                      }`}>
+                        {data.current.momentum}
+                        {data.current.change30d && ` (${data.current.change30d >= 0 ? '+' : ''}${data.current.change30d.toFixed(1)}% avg 30d)`}
+                </div>
+              </div>
+                  </div>
+                </div>
               )}
               
               {/* Quick Stats List */}
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-500 mt-1">Total TVL</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium text-gray-500 mt-1">Total TVL</span>
+                    {data.historicalMetrics && data.historicalMetrics.tvl.length >= 7 && (
+                      <span className="text-sm">
+                        {(() => {
+                          const last7Days = data.historicalMetrics.tvl.slice(-7);
+                          const trend = last7Days[last7Days.length - 1] > last7Days[0];
+                          return trend ? '📈' : '📉';
+                        })()}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-right">
                     <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.tvl)}</div>
                     {data.historicalMetrics && (
@@ -239,7 +299,18 @@ export default function ProtocolDetailPage() {
                 </div>
 
                 <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-500 mt-1">24h Fees</span>
+                  <div className="flex items-center gap-1">
+                    <span className="text-sm font-medium text-gray-500 mt-1">24h Fees</span>
+                    {data.historicalMetrics && data.historicalMetrics.fees.length >= 7 && (
+                      <span className="text-sm">
+                        {(() => {
+                          const last7Days = data.historicalMetrics.fees.slice(-7);
+                          const trend = last7Days[last7Days.length - 1] > last7Days[0];
+                          return trend ? '📈' : '📉';
+                        })()}
+                      </span>
+                    )}
+                  </div>
                   <div className="text-right">
                     <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.fees)}</div>
                     {data.historicalMetrics && (
@@ -258,7 +329,18 @@ export default function ProtocolDetailPage() {
                 {data.type === 'dex' && (
                   <>
                     <div className="flex justify-between items-start">
-                      <span className="text-sm font-medium text-gray-500 mt-1">24h Volume</span>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-medium text-gray-500 mt-1">24h Volume</span>
+                        {data.historicalMetrics && data.historicalMetrics.volume.length >= 7 && (
+                          <span className="text-sm">
+                            {(() => {
+                              const last7Days = data.historicalMetrics.volume.slice(-7);
+                              const trend = last7Days[last7Days.length - 1] > last7Days[0];
+                              return trend ? '📈' : '📉';
+                            })()}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-right">
                         <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.volume)}</div>
                          {data.historicalMetrics && (
@@ -279,10 +361,28 @@ export default function ProtocolDetailPage() {
                         <span className="text-base font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
                       </div>
                     )}
+                    {data.historicalMetrics && data.historicalMetrics.fees && data.historicalMetrics.fees.length >= 30 && (
+                      <div className="flex justify-between items-start">
+                        <span className="text-sm font-medium text-gray-500 mt-1">Fee Growth (30d)</span>
+                        <div className="text-right">
+                          {(() => {
+                            const last30Days = data.historicalMetrics.fees.slice(-30);
+                            const first15Avg = last30Days.slice(0, 15).reduce((a, b) => a + b, 0) / 15;
+                            const last15Avg = last30Days.slice(-15).reduce((a, b) => a + b, 0) / 15;
+                            const growthRate = ((last15Avg - first15Avg) / first15Avg) * 100;
+                            return (
+                              <div className={`text-base font-bold ${growthRate >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                                {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      </div>
+                    )}
                   </>
                 )}
 
-                {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
+        {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
                   <>
                     <div className="flex justify-between items-center">
                       <span className="text-sm font-medium text-gray-500">Utilization</span>
@@ -293,7 +393,7 @@ export default function ProtocolDetailPage() {
                         {data.type === 'cdp' ? 'Minted' : 'Borrowed'}
                       </span>
                       <span className="text-base font-bold text-gray-900">
-                        {formatCurrency(data.current.lendingMetrics.borrowVolume)}
+                      {formatCurrency(data.current.lendingMetrics.borrowVolume)}
                       </span>
                     </div>
                     <div className="flex justify-between items-center">
@@ -303,6 +403,19 @@ export default function ProtocolDetailPage() {
                       <span className="text-base font-bold text-gray-900">
                         {formatCurrency(data.current.lendingMetrics.supplyVolume)}
                       </span>
+                    </div>
+                    <div className="flex justify-between items-start">
+                      <span className="text-sm font-medium text-gray-500 mt-1">Vanilla Assets</span>
+                      <div className="text-right">
+                        <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.lendingMetrics.vanillaSupply)}</div>
+                        <div className="text-xs text-gray-500">
+                      {data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}% of supply
+                    </div>
+                  </div>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-500">Vanilla Util.</span>
+                      <span className="text-base font-bold text-gray-900">{data.current.lendingMetrics.vanillaUtilization.toFixed(1)}%</span>
                     </div>
                   </>
                 )}
@@ -348,14 +461,14 @@ export default function ProtocolDetailPage() {
                   </div>
                 )}
               </div>
-            </div>
+                    </div>
 
             {/* Weighting Schema Card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Scoring Weights</h3>
                 <InfoTooltip content="How this protocol is scored relative to its peers." position="top" />
-              </div>
+                    </div>
               <div className="space-y-3">
                 {weights.map((w) => (
                   <div key={w.name} className="group">
@@ -386,7 +499,7 @@ export default function ProtocolDetailPage() {
                   <div className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 relative z-10">
                     SPT Score
                     <InfoTooltip content="Composite score (0-1) based on weighted, normalized metrics." position="right" />
-                  </div>
+                    </div>
                   <div className="flex items-baseline gap-4">
                     <span className="text-6xl font-black text-[#49997E] tracking-tight">
                       {data?.current?.score !== undefined ? data.current.score.toFixed(4) : '—'}
@@ -394,14 +507,14 @@ export default function ProtocolDetailPage() {
                     <span className={`px-3 py-1 rounded-lg text-lg font-bold ${rating.color}`}>
                       {rating.label}
                     </span>
-                  </div>
+                    </div>
                   <div className="mt-4 flex items-center gap-2">
                     <span className={`text-sm font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {formatChange(data.current.change30d)}
                     </span>
                     <span className="text-xs text-gray-400 font-medium">vs 30d avg</span>
                   </div>
-                </div>
+                    </div>
 
                 {/* Changes Grid */}
                 <div className="lg:col-span-2 p-8">
@@ -421,13 +534,13 @@ export default function ProtocolDetailPage() {
                       <div className="text-xs text-gray-400 font-medium mb-1">24H CHANGE</div>
                       <div className={`text-xl font-bold ${data.current.change24h && data.current.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {formatChange(data.current.change24h)}
-                      </div>
+                    </div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-400 font-medium mb-1">7D CHANGE</div>
                       <div className={`text-xl font-bold ${data.current.change7d && data.current.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {formatChange(data.current.change7d)}
-                      </div>
+                  </div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-400 font-medium mb-1">30D CHANGE</div>
@@ -443,22 +556,22 @@ export default function ProtocolDetailPage() {
             {/* Main Chart Section */}
             <div className="bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow p-6 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-                <div>
+                  <div>
                   <h3 className="text-xl font-bold text-gray-900">Score Trajectory</h3>
                   <p className="text-sm text-gray-500">Historical performance analysis</p>
-                </div>
+                  </div>
                 <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setShowMomentum(!showMomentum)}
+                    <button
+                      onClick={() => setShowMomentum(!showMomentum)}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${
-                      showMomentum
+                        showMomentum
                         ? 'bg-orange-50 border-orange-200 text-orange-700'
                         : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
-                    }`}
-                  >
+                      }`}
+                    >
                     <span className={`w-2 h-2 rounded-full ${showMomentum ? 'bg-orange-500' : 'bg-gray-300'}`}></span>
                     Self-Trend
-                  </button>
+                    </button>
                   <div className="flex bg-gray-100 p-1 rounded-xl">
                     {(['7d', '30d', '90d'] as const).map((range) => (
                       <button
@@ -506,8 +619,8 @@ export default function ProtocolDetailPage() {
                         domain={['auto', 'auto']}
                         dx={-10}
                       />
-                      <Tooltip
-                        contentStyle={{
+                      <Tooltip 
+                        contentStyle={{ 
                           backgroundColor: 'rgba(255, 255, 255, 0.95)',
                           border: 'none',
                           borderRadius: '12px',
@@ -525,7 +638,7 @@ export default function ProtocolDetailPage() {
                         type="monotone" 
                         dataKey="score" 
                         stroke="#49997E" 
-                        strokeWidth={3} 
+                        strokeWidth={3}
                         fillOpacity={1} 
                         fill="url(#colorScore)" 
                         activeDot={{ r: 6, strokeWidth: 0, fill: '#49997E' }}
@@ -549,8 +662,8 @@ export default function ProtocolDetailPage() {
                   </div>
                 )}
               </div>
-            </div>
-
+              </div>
+              
             {/* Deep Dive Metrics Grid */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Detailed Metrics Panel */}
@@ -562,14 +675,14 @@ export default function ProtocolDetailPage() {
                 <div className="space-y-6">
                   {data.type === 'dex' && data.current.dexMetrics ? (
                     <>
-                      <div>
+                  <div>
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">Capital Efficiency (Vol/TVL)</span>
                           <span className="text-sm font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
-                        </div>
+                  </div>
                         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(data.current.dexMetrics.capitalEfficiency * 100, 100)}%` }}></div>
-                        </div>
+                      </div>
                         <p className="text-xs text-gray-500 mt-2">
                           Higher is better. Indicates how much volume is generated per $1 of TVL.
                         </p>
@@ -579,7 +692,7 @@ export default function ProtocolDetailPage() {
                         <div className="flex justify-between mb-1">
                           <span className="text-sm text-gray-600">Daily Revenue</span>
                           <span className="text-sm font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
-                        </div>
+                      </div>
                       </div>
                     </>
                   ) : data.current.lendingMetrics ? (
@@ -588,19 +701,19 @@ export default function ProtocolDetailPage() {
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">Utilization Rate</span>
                           <span className="text-sm font-bold text-gray-900">{data.current.lendingMetrics.utilization.toFixed(1)}%</span>
-                        </div>
+                    </div>
                         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div className={`h-full rounded-full ${
                             data.current.lendingMetrics.utilization > 80 ? 'bg-orange-500' : 'bg-blue-500'
                           }`} style={{ width: `${data.current.lendingMetrics.utilization}%` }}></div>
-                        </div>
+            </div>
                       </div>
 
                       <div>
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">
                             Vanilla Supply
-                          </span>
+                        </span>
                           <span className="text-sm font-bold text-gray-900">
                             {data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}%
                           </span>
@@ -623,7 +736,7 @@ export default function ProtocolDetailPage() {
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                   </span>
                   <h3 className="font-bold text-blue-900">Automated Insight</h3>
-                </div>
+          </div>
                 
                 <p className="text-blue-800 leading-relaxed text-sm sm:text-base">
                   {data.type === 'dex' && data.current.dexMetrics ? (
@@ -641,12 +754,12 @@ export default function ProtocolDetailPage() {
                         : " Lower utilization indicates ample liquidity but potentially inefficient capital deployment."}
                     </>
                   ) : "Data analysis pending for this protocol type."}
-                </p>
-              </div>
+            </p>
+          </div>
             </div>
 
           </main>
-        </div>
+          </div>
       </div>
     </div>
   );
