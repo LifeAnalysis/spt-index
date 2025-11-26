@@ -69,7 +69,7 @@ export default function Home() {
       console.log('🎬 Component mounted, checking for cached data...');
       
       // Deployment version for cache invalidation
-      const DEPLOYMENT_VERSION = '1.1.2'; // Force cache clear - backend data refreshed
+      const DEPLOYMENT_VERSION = '1.1.3'; // Snappy caching update
       const cachedVersion = sessionStorage.getItem('spt-version');
       console.log(`🔧 Frontend Version: ${DEPLOYMENT_VERSION}, Cached Version: ${cachedVersion}`);
       
@@ -91,17 +91,21 @@ export default function Home() {
           const parsedData = JSON.parse(cached);
           const lastUpdateTime = new Date(cachedTime);
           const cacheAge = Date.now() - lastUpdateTime.getTime();
-          const STALE_TIME = 30 * 1000; // 30 seconds - reduced for faster updates
+          const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours - data refreshes daily
           
-          // Show cached data immediately
+          // Show cached data immediately for snappy UX
           setData(parsedData);
           setLastUpdated(lastUpdateTime);
           setLoading(false);
-          console.log(`✅ Showing cached data (${Math.floor(cacheAge / 1000)}s old)`);
+          console.log(`✅ Showing cached data (${Math.floor(cacheAge / 1000 / 60)}min old)`);
           
-          // Always fetch fresh data in background to ensure latest
-          console.log('🔄 Fetching fresh data in background...');
-          await fetchData();
+          // Only fetch fresh data if cache is older than 24h
+          if (cacheAge > CACHE_DURATION) {
+            console.log('🔄 Cache expired, fetching fresh data in background...');
+            await fetchData();
+          } else {
+            console.log(`✨ Cache is fresh (valid for ${Math.floor((CACHE_DURATION - cacheAge) / 1000 / 60 / 60)}h more)`);
+          }
         } catch (e) {
           console.error('❌ Failed to parse cached data:', e);
           console.log('🚀 Fetching fresh data...');

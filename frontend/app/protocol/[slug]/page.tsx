@@ -22,7 +22,39 @@ export default function ProtocolDetailPage() {
   const [categoryAvg, setCategoryAvg] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchProtocolDetail();
+    const loadProtocolData = async () => {
+      // Try to load from cache first
+      const cacheKey = `protocol-${slug}`;
+      const cached = sessionStorage.getItem(cacheKey);
+      const cachedTime = sessionStorage.getItem(`${cacheKey}-time`);
+      
+      if (cached && cachedTime) {
+        try {
+          const parsedData = JSON.parse(cached);
+          const cacheAge = Date.now() - parseInt(cachedTime);
+          const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+          
+          // Show cached data immediately
+          setData(parsedData);
+          setLoading(false);
+          console.log(`✅ Showing cached ${slug} data (${Math.floor(cacheAge / 1000 / 60)}min old)`);
+          
+          // Only fetch if cache expired
+          if (cacheAge > CACHE_DURATION) {
+            console.log('🔄 Cache expired, fetching fresh data...');
+            await fetchProtocolDetail();
+          }
+          return;
+        } catch (e) {
+          console.error('Failed to parse cached protocol data:', e);
+        }
+      }
+      
+      // No cache, fetch fresh data
+      await fetchProtocolDetail();
+    };
+    
+    loadProtocolData();
   }, [slug]);
 
   const fetchProtocolDetail = async () => {
@@ -39,15 +71,23 @@ export default function ProtocolDetailPage() {
       
       console.log(`Fetching protocol ${slug} from Railway...`);
       
-      const [detailRes, indexRes] = await Promise.all([
-        fetch(`${RAILWAY_API}/api/protocol/${slug}`, { 
-          headers,
-          next: { revalidate: 60 }
-        }),
-        fetch(`${RAILWAY_API}/api/spt`, {
-          next: { revalidate: 60 }
-        })
-      ]);
+      // Reuse cached SPT index data if available
+      const cachedIndex = sessionStorage.getItem('spt-data');
+      let indexData;
+      
+      if (cachedIndex) {
+        try {
+          indexData = JSON.parse(cachedIndex);
+          console.log('✅ Reusing cached SPT index data');
+        } catch (e) {
+          indexData = null;
+        }
+      }
+      
+      const detailRes = await fetch(`${RAILWAY_API}/api/protocol/${slug}`, { 
+        headers,
+        next: { revalidate: 86400 } // 24h cache
+      });
       
       if (detailRes.status === 304) {
         setLoading(false);
@@ -55,7 +95,6 @@ export default function ProtocolDetailPage() {
       }
       
       if (!detailRes.ok) throw new Error('Protocol not found');
-      if (!indexRes.ok) throw new Error('Failed to fetch SPT index');
       
       const newEtag = detailRes.headers.get('ETag');
       if (newEtag) {
@@ -63,9 +102,17 @@ export default function ProtocolDetailPage() {
       }
       
       const detailData = await detailRes.json();
-      const indexData = await indexRes.json();
       
-      const allProtocols = [...(indexData.dex || []), ...(indexData.lending || []), ...(indexData.cdp || [])];
+      // Fetch index data only if not cached
+      if (!indexData) {
+        const indexRes = await fetch(`${RAILWAY_API}/api/spt`, {
+          next: { revalidate: 86400 } // 24h cache
+        });
+        if (!indexRes.ok) throw new Error('Failed to fetch SPT index');
+        indexData = await indexRes.json();
+      }
+      
+      const allProtocols = [...(indexData.dex || []), ...(indexData.lending || []), ...(indexData.cdp || []), ...(indexData['liquid-staking'] || [])];
       const cohortData = allProtocols.find((p: any) => p.slug === slug);
       
       // Calculate category average
@@ -91,6 +138,11 @@ export default function ProtocolDetailPage() {
           momentum: cohortData?.momentum || detailData.current.momentum
         }
       };
+      
+      // Cache the protocol data
+      const cacheKey = `protocol-${slug}`;
+      sessionStorage.setItem(cacheKey, JSON.stringify(mergedData));
+      sessionStorage.setItem(`${cacheKey}-time`, Date.now().toString());
       
       console.log(`✅ Successfully loaded ${slug} data`);
       setData(mergedData);

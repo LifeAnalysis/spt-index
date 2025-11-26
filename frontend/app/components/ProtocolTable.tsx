@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { memo, useCallback } from 'react';
 import InfoTooltip from './InfoTooltip';
 import MobileProtocolCard from './MobileProtocolCard';
 import { Protocol, SortColumn, SortDirection } from '../types';
@@ -204,17 +205,18 @@ export default function ProtocolTable({
                           return slug ? `/protocol/${slug}` : '#';
                         })()}
                         className="flex items-center gap-4 w-full text-left group-hover:translate-x-1 transition-transform duration-200"
+                        prefetch={true}
                       >
                         <div className="relative w-10 h-10 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {protocol.logo ? (
-                            <div className="relative w-8 h-8">
-                              <Image 
-                                src={protocol.logo} 
-                                alt={protocol.protocol}
-                                fill
-                                className="object-contain"
-                              />
-                            </div>
+                            <img 
+                              src={protocol.logo} 
+                              alt={protocol.protocol}
+                              width={32}
+                              height={32}
+                              loading="lazy"
+                              className="object-contain"
+                            />
                           ) : (
                             <span className="text-lg">{icon}</span>
                           )}
