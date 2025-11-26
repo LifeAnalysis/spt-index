@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useParams, useRouter } from 'next/navigation';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar, Cell, ReferenceLine } from 'recharts';
 import InfoTooltip from '../../components/InfoTooltip';
@@ -30,11 +31,8 @@ export default function ProtocolDetailPage() {
       setError(null);
       
       const RAILWAY_API = 'https://spt-index-production.up.railway.app';
-      const cacheBuster = `?t=${Date.now()}`;
       
-      const headers: HeadersInit = {
-        'Cache-Control': 'no-cache'
-      };
+      const headers: HeadersInit = {};
       if (etag) {
         headers['If-None-Match'] = etag;
       }
@@ -42,13 +40,12 @@ export default function ProtocolDetailPage() {
       console.log(`Fetching protocol ${slug} from Railway...`);
       
       const [detailRes, indexRes] = await Promise.all([
-        fetch(`${RAILWAY_API}/api/protocol/${slug}${cacheBuster}`, { 
+        fetch(`${RAILWAY_API}/api/protocol/${slug}`, { 
           headers,
-          cache: 'no-store'
+          next: { revalidate: 60 }
         }),
-        fetch(`${RAILWAY_API}/api/spt${cacheBuster}`, {
-          cache: 'no-store',
-          headers: { 'Cache-Control': 'no-cache' }
+        fetch(`${RAILWAY_API}/api/spt`, {
+          next: { revalidate: 60 }
         })
       ]);
       
@@ -105,7 +102,7 @@ export default function ProtocolDetailPage() {
   };
 
   const formatChange = (change: number | null | undefined) => {
-    if (change === null || change === undefined || isNaN(change)) return '—';
+    if (change === null || change === undefined || isNaN(change)) return 'N/A';
     const isPositive = change >= 0;
     const arrow = isPositive ? '↑' : '↓';
     return `${arrow} ${Math.abs(change).toFixed(2)}%`;
@@ -214,8 +211,8 @@ export default function ProtocolDetailPage() {
                   data.type === 'lending' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'
                 }`}>
                   {data.type === 'dex' ? 'DEX' : data.type === 'lending' ? 'Lending' : 'CDP'}
-                </span>
-              </div>
+              </span>
+            </div>
 
               <div className="flex items-center gap-4 mb-4">
                 {data.logo && (
@@ -281,10 +278,10 @@ export default function ProtocolDetailPage() {
                         <span className="text-xs ml-1 font-normal">
                           ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d avg)
                         </span>
-                      </div>
-                    </div>
-                  </div>
                 </div>
+              </div>
+                </div>
+              </div>
               )}
               
               {/* Quick Stats List */}
@@ -457,7 +454,7 @@ export default function ProtocolDetailPage() {
                     </div>
                   <div className="flex items-baseline gap-4">
                     <span className="text-6xl font-black text-[#49997E] tracking-tight">
-                      {data?.current?.score !== undefined ? data.current.score.toFixed(4) : '—'}
+                      {data?.current?.score !== undefined ? data.current.score.toFixed(4) : 'N/A'}
                     </span>
                     <span className={`px-3 py-1 rounded-lg text-lg font-bold ${rating.color}`}>
                       {rating.label}

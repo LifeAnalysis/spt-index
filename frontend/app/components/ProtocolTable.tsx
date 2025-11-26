@@ -1,3 +1,5 @@
+import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import InfoTooltip from './InfoTooltip';
 import MobileProtocolCard from './MobileProtocolCard';
@@ -86,7 +88,7 @@ export default function ProtocolTable({
   // Helper for Change Badges
   const ChangeBadge = ({ value }: { value: number | null | undefined }) => {
     if (value === null || value === undefined || isNaN(value)) {
-      return <span className="text-gray-300 font-medium text-xs">—</span>;
+      return <span className="text-gray-300 font-medium text-xs">N/A</span>;
     }
     const isPositive = value >= 0;
     const bgClass = isPositive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100';
@@ -195,21 +197,23 @@ export default function ProtocolTable({
                   >
                     {/* Protocol Name & Logo */}
                     <td className="px-6 py-4">
-                      <button
-                        onClick={() => {
+                      <Link
+                        href={(() => {
                           const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
-                          if (slug) router.push(`/protocol/${slug}`);
-                        }}
+                          return slug ? `/protocol/${slug}` : '#';
+                        })()}
                         className="flex items-center gap-4 w-full text-left group-hover:translate-x-1 transition-transform duration-200"
                       >
                         <div className="relative w-10 h-10 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
                           {protocol.logo ? (
-                            <img 
-                              src={protocol.logo} 
-                              alt={protocol.protocol}
-                              className="w-8 h-8 object-contain"
-                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                            />
+                            <div className="relative w-8 h-8">
+                              <Image 
+                                src={protocol.logo} 
+                                alt={protocol.protocol}
+                                fill
+                                className="object-contain"
+                              />
+                            </div>
                           ) : (
                             <span className="text-lg">{icon}</span>
                           )}
@@ -222,7 +226,7 @@ export default function ProtocolTable({
                             {protocol.type}
                           </span>
                         </div>
-                      </button>
+                      </Link>
                     </td>
 
                     {/* Rating */}
@@ -264,7 +268,7 @@ export default function ProtocolTable({
                           Stable
                         </span>
                       )}
-                      {!protocol.momentum && <span className="text-gray-300">—</span>}
+                      {!protocol.momentum && <span className="text-gray-300">N/A</span>}
                     </td>
 
                     {/* Changes */}

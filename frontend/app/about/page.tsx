@@ -46,7 +46,7 @@ export default function AboutPage() {
               </span>
             </h1>
             <p className="text-base sm:text-lg lg:text-xl text-gray-600 leading-relaxed mb-8 max-w-3xl mx-auto">
-              The SPT Index is the <strong>first multi-dimensional scoring system</strong> that measures what protocols actually do—
+              The SPT Index is the <strong>first multi-dimensional scoring system</strong> that measures what protocols actually do: 
               trading activity, capital efficiency, borrow demand, and revenue generation. 
               <span className="font-semibold text-gray-900"> Think credit ratings for DeFi, </span>
               powered by real-time on-chain data and statistical normalization.
@@ -76,7 +76,7 @@ export default function AboutPage() {
                 The Problem: One-Dimensional Thinking
               </h2>
               <p className="text-base sm:text-lg lg:text-xl text-gray-600 max-w-3xl mx-auto">
-                Traditional DeFi metrics focus on <strong>single dimensions</strong>—TVL for lending, volume for DEXs—
+                Traditional DeFi metrics focus on <strong>single dimensions</strong> like TVL for lending or volume for DEXs, 
                 which miss the bigger picture. SPT introduces <strong>multi-metric scoring</strong> that captures operational health across protocols.
               </p>
             </div>
@@ -143,7 +143,7 @@ export default function AboutPage() {
                 <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                   Protocol A: $10B TVL, $2B volume (0.2x efficiency). 
                   Protocol B: $3B TVL, $2.5B volume (0.83x). 
-                  <span className="block mt-2 text-green-700 font-bold"> → SPT ranks B higher—capital efficiency wins.</span>
+                  <span className="block mt-2 text-green-700 font-bold"> → SPT ranks B higher because capital efficiency wins.</span>
                 </p>
               </div>
               <div className="bg-white rounded-xl sm:rounded-2xl p-5 sm:p-6 border-2 border-purple-200 shadow-md hover:shadow-lg transition-shadow">
@@ -154,7 +154,7 @@ export default function AboutPage() {
                 <p className="text-sm sm:text-base text-gray-700 leading-relaxed">
                   Protocol X: $5B supply, $500M borrowed (10% util). 
                   Protocol Y: $2B supply, $1.2B borrowed (60% util). 
-                  <span className="block mt-2 text-green-700 font-bold"> → SPT ranks Y higher—real demand matters.</span>
+                  <span className="block mt-2 text-green-700 font-bold"> → SPT ranks Y higher because real demand matters.</span>
                 </p>
               </div>
             </div>
@@ -255,7 +255,7 @@ export default function AboutPage() {
             </h2>
             <p className="text-body-lg text-gray-600 text-center mb-8 max-w-3xl mx-auto">
               Single metrics tell one story. SPT combines activity, efficiency, and revenue to give you the <strong>complete picture</strong> 
-              of protocol performance—like a credit rating, but for DeFi.
+              of protocol performance, like a credit rating but for DeFi.
             </p>
 
             <div className="grid md:grid-cols-3 gap-6">
@@ -263,7 +263,7 @@ export default function AboutPage() {
                 <div className="text-4xl mb-3">🎯</div>
                 <h3 className="text-h3 font-bold text-gray-900 mb-3">See Full Performance</h3>
                 <p className="text-body text-gray-600">
-                  Not just TVL or volume—get a composite score that captures activity, efficiency, revenue, and sustainability all at once.
+                  Not just TVL or volume. Get a composite score that captures activity, efficiency, revenue, and sustainability all at once.
                 </p>
               </div>
 
@@ -271,7 +271,7 @@ export default function AboutPage() {
                 <div className="text-4xl mb-3">⚡</div>
                 <h3 className="text-h3 font-bold text-gray-900 mb-3">Compare Apples to Apples</h3>
                 <p className="text-body text-gray-600">
-                  Statistical normalization ensures fair comparison—small high-performers can outrank large low-performers.
+                  Statistical normalization ensures fair comparison so small high-performers can outrank large low-performers.
                 </p>
               </div>
 

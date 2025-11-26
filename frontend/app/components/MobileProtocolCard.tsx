@@ -1,4 +1,5 @@
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import Image from 'next/image';
 import { Protocol } from '../types';
 import { PROTOCOL_SLUGS, formatChange, getScoreRating } from '../utils';
 
@@ -8,16 +9,13 @@ interface MobileProtocolCardProps {
 }
 
 export default function MobileProtocolCard({ protocol, index }: MobileProtocolCardProps) {
-  const router = useRouter();
   const rating = getScoreRating(protocol.score);
+  const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
   
   return (
-    <div
-      onClick={() => {
-        const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
-        if (slug) router.push(`/protocol/${slug}`);
-      }}
-      className="bg-white rounded-lg p-3 active:scale-[0.98] transition-transform cursor-pointer border border-gray-200 shadow-sm hover:shadow-md"
+    <Link
+      href={slug ? `/protocol/${slug}` : '#'}
+      className="block bg-white rounded-lg p-3 active:scale-[0.98] transition-transform cursor-pointer border border-gray-200 shadow-sm hover:shadow-md"
     >
       <div className="flex items-center gap-3">
         {/* Rank */}
@@ -28,14 +26,14 @@ export default function MobileProtocolCard({ protocol, index }: MobileProtocolCa
         {/* Logo & Name */}
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           {protocol.logo && (
-            <img 
-              src={protocol.logo} 
-              alt={`${protocol.protocol} logo`}
-              className="w-9 h-9 rounded-full flex-shrink-0"
-              onError={(e) => {
-                e.currentTarget.style.display = 'none';
-              }}
-            />
+            <div className="relative w-9 h-9 flex-shrink-0">
+              <Image 
+                src={protocol.logo} 
+                alt={`${protocol.protocol} logo`}
+                fill
+                className="rounded-full object-contain"
+              />
+            </div>
           )}
           <div className="min-w-0 flex-1">
             <div className="text-gray-900 font-semibold text-base truncate">{protocol.protocol}</div>
@@ -77,7 +75,6 @@ export default function MobileProtocolCard({ protocol, index }: MobileProtocolCa
           <div className="text-[10px] text-gray-500">24h/7d</div>
         </div>
       </div>
-    </div>
+    </Link>
   );
 }
-

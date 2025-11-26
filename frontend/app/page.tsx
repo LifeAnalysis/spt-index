@@ -24,14 +24,9 @@ export default function Home() {
       setError(null);
       
       const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
-      // Add cache-busting timestamp to bypass HTTP caching
-      const cacheBuster = `?t=${Date.now()}`;
-      console.log('📡 Fetching from:', RAILWAY_API + cacheBuster);
-      const res = await fetch(RAILWAY_API + cacheBuster, {
-        cache: 'no-store', // Disable Next.js caching
-        headers: {
-          'Cache-Control': 'no-cache' // Request fresh data from server
-        }
+      console.log('📡 Fetching from:', RAILWAY_API);
+      const res = await fetch(RAILWAY_API, {
+        next: { revalidate: 60 }
       });
       
       console.log('📊 Response status:', res.status, res.ok);
@@ -291,7 +286,7 @@ export default function Home() {
             <div>
               <h3 className="text-body font-bold text-blue-900 mb-1.5">How SPT Works</h3>
               <p className="text-body-sm text-gray-700 mb-2">
-                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>—DEXs compete with DEXs, lending platforms with lending platforms. 
+                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>. DEXs compete with DEXs, lending platforms with lending platforms. 
                 Metrics are standardized over a 90-day window using z-scores, enabling fair comparison across sizes and conditions.
               </p>
             </div>
@@ -490,7 +485,7 @@ export default function Home() {
                     />
                   </div>
                   <p className="text-xs text-gray-600 mb-3">
-                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias—a small, efficient protocol can outrank a large, inefficient one.
+                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias so a small, efficient protocol can outrank a large, inefficient one.
                   </p>
                   <div className="bg-gray-50 rounded p-2 text-xs text-gray-700">
                     <div className="font-mono mb-1">z = (x - μ) / σ</div>
