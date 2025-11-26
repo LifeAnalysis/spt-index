@@ -73,6 +73,7 @@ export default function ProtocolDetailPage() {
       if (detailData.type === 'dex') categoryProtocols = indexData.dex || [];
       else if (detailData.type === 'lending') categoryProtocols = indexData.lending || [];
       else if (detailData.type === 'cdp') categoryProtocols = indexData.cdp || [];
+      else if (detailData.type === 'liquid-staking') categoryProtocols = indexData['liquid-staking'] || [];
       
       if (categoryProtocols.length > 0) {
         const avg = categoryProtocols.reduce((sum: number, p: any) => sum + p.score, 0) / categoryProtocols.length;
@@ -163,6 +164,13 @@ export default function ProtocolDetailPage() {
         { name: 'Util', value: 20, color: '#f59e0b' },
         { name: 'Revenue', value: 15, color: '#10b981' }
       ];
+    } else if (data.type === 'liquid-staking') {
+      return [
+        { name: 'TVL', value: 35, color: '#3b82f6' },
+        { name: 'Yield', value: 30, color: '#8b5cf6' },
+        { name: 'Revenue', value: 20, color: '#10b981' },
+        { name: 'Growth', value: 15, color: '#f59e0b' }
+      ];
     } else {
       return [
         { name: 'Borrow', value: 40, color: '#3b82f6' },
@@ -208,9 +216,12 @@ export default function ProtocolDetailPage() {
               <div className="mb-6">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
-                  data.type === 'lending' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'
+                  data.type === 'lending' ? 'bg-green-50 text-green-700' : 
+                  data.type === 'liquid-staking' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'
                 }`}>
-                  {data.type === 'dex' ? 'DEX' : data.type === 'lending' ? 'Lending' : 'CDP'}
+                  {data.type === 'dex' ? 'DEX' : 
+                   data.type === 'lending' ? 'Lending' : 
+                   data.type === 'liquid-staking' ? 'Liquid Staking' : 'CDP'}
               </span>
             </div>
 
