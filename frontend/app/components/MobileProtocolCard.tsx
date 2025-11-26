@@ -54,8 +54,8 @@ export default function MobileProtocolCard({ protocol, index }: MobileProtocolCa
           </div>
         </div>
         
-          {/* Changes */}
-          <div className="flex flex-col gap-1 items-end flex-shrink-0">
+        {/* Changes */}
+        <div className="flex flex-col gap-1 items-end flex-shrink-0">
             <div className="text-xs font-semibold tabular-nums">
               {(() => {
                 const change = formatChange(protocol.change24h);
@@ -64,7 +64,7 @@ export default function MobileProtocolCard({ protocol, index }: MobileProtocolCa
                 }
                 return <span className={change.color}>{change.arrow} {change.value}%</span>;
               })()}
-            </div>
+          </div>
             <div className="text-xs font-medium tabular-nums">
               {(() => {
                 const change = formatChange(protocol.change7d);
@@ -73,9 +73,9 @@ export default function MobileProtocolCard({ protocol, index }: MobileProtocolCa
                 }
                 return <span className={change.color}>{change.arrow} {change.value}%</span>;
               })()}
-            </div>
-            <div className="text-[10px] text-gray-500">24h/7d</div>
           </div>
+          <div className="text-[10px] text-gray-500">24h/7d</div>
+        </div>
       </div>
     </div>
   );
