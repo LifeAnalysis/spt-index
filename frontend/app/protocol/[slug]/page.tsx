@@ -62,14 +62,7 @@ export default function ProtocolDetailPage() {
       setLoading(true);
       setError(null);
       
-      const RAILWAY_API = 'https://spt-index-production.up.railway.app';
-      
-      const headers: HeadersInit = {};
-      if (etag) {
-        headers['If-None-Match'] = etag;
-      }
-      
-      console.log(`Fetching protocol ${slug} from Railway...`);
+      console.log(`Fetching protocol ${slug} from Vercel cache...`);
       
       // Reuse cached SPT index data if available
       const cachedIndex = sessionStorage.getItem('spt-data');
@@ -84,29 +77,24 @@ export default function ProtocolDetailPage() {
         }
       }
       
-      const detailRes = await fetch(`${RAILWAY_API}/api/protocol/${slug}`, { 
-        headers,
-        next: { revalidate: 86400 } // 24h cache
+      // Use Vercel API route which caches Railway backend data for ALL users
+      const detailRes = await fetch(`/api/protocol/${slug}`, { 
+        cache: 'default' // Use browser + Vercel cache
       });
       
-      if (detailRes.status === 304) {
-        setLoading(false);
-        return;
-      }
-      
-      if (!detailRes.ok) throw new Error('Protocol not found');
-      
-      const newEtag = detailRes.headers.get('ETag');
-      if (newEtag) {
-        setEtag(newEtag);
+      if (!detailRes.ok) {
+        if (detailRes.status === 404) {
+          throw new Error('Protocol not found');
+        }
+        throw new Error('Failed to fetch protocol data');
       }
       
       const detailData = await detailRes.json();
       
       // Fetch index data only if not cached
       if (!indexData) {
-        const indexRes = await fetch(`${RAILWAY_API}/api/spt`, {
-          next: { revalidate: 86400 } // 24h cache
+        const indexRes = await fetch('/api/spt', {
+          cache: 'default' // Use browser + Vercel cache
         });
         if (!indexRes.ok) throw new Error('Failed to fetch SPT index');
         indexData = await indexRes.json();

@@ -24,10 +24,11 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
-      console.log('📡 Fetching from:', RAILWAY_API);
-      const res = await fetch(RAILWAY_API, {
-        next: { revalidate: 60 }
+      // Use Vercel API route which caches Railway backend data for ALL users
+      const API_URL = '/api/spt';
+      console.log('📡 Fetching from Vercel cache:', API_URL);
+      const res = await fetch(API_URL, {
+        cache: 'default' // Use browser + Vercel cache
       });
       
       console.log('📊 Response status:', res.status, res.ok);
