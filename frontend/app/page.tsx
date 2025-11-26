@@ -362,7 +362,12 @@ export default function Home() {
                         <div key={p.slug} className="flex justify-between items-center text-xs">
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400 font-medium w-3">{i + 1}</span>
-                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                            {p.logo ? (
+                              <img src={p.logo} alt={p.protocol} className="w-4 h-4 rounded-full flex-shrink-0" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-gray-700 truncate max-w-[60px]">{p.protocol}</span>
                           </div>
                           <span className="text-gray-500">{formatCurrency(p.tvl)}</span>
                         </div>
@@ -385,7 +390,12 @@ export default function Home() {
                         <div key={p.slug} className="flex justify-between items-center text-xs">
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400 font-medium w-3">{i + 1}</span>
-                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                            {p.logo ? (
+                              <img src={p.logo} alt={p.protocol} className="w-4 h-4 rounded-full flex-shrink-0" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-gray-700 truncate max-w-[60px]">{p.protocol}</span>
                           </div>
                           <span className="text-gray-500">{((p.fees / p.tvl) * 365 * 100).toFixed(1)}%</span>
                         </div>
@@ -408,7 +418,12 @@ export default function Home() {
                         <div key={p.slug} className="flex justify-between items-center text-xs">
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400 font-medium w-3">{i + 1}</span>
-                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                            {p.logo ? (
+                              <img src={p.logo} alt={p.protocol} className="w-4 h-4 rounded-full flex-shrink-0" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-gray-700 truncate max-w-[60px]">{p.protocol}</span>
                           </div>
                           <span className="text-gray-500">{formatCurrency(p.fees)}</span>
                         </div>
@@ -431,7 +446,12 @@ export default function Home() {
                         <div key={p.slug} className="flex justify-between items-center text-xs">
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400 font-medium w-3">{i + 1}</span>
-                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                            {p.logo ? (
+                              <img src={p.logo} alt={p.protocol} className="w-4 h-4 rounded-full flex-shrink-0" />
+                            ) : (
+                              <div className="w-4 h-4 rounded-full bg-gray-200 flex-shrink-0" />
+                            )}
+                            <span className="font-medium text-gray-700 truncate max-w-[60px]">{p.protocol}</span>
                           </div>
                           <span className="text-gray-500">{formatCurrency(p.volume)}</span>
                         </div>
