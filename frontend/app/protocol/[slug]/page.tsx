@@ -263,324 +263,170 @@ export default function ProtocolDetailPage() {
       </nav>
 
       <div className="container mx-auto px-4 sm:px-6 py-8 max-w-[1400px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* LEFT SIDEBAR - INFO & METADATA */}
-          <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
-            {/* Identity Card */}
-            <div className="bg-glass rounded-2xl p-5 sm:p-6 hover:shadow-xl transition-shadow">
-              <div className="mb-6">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
-                  data.type === 'lending' ? 'bg-green-50 text-green-700' : 
-                  data.type === 'liquid-staking' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'
-                }`}>
-                  {data.type === 'dex' ? 'DEX' : 
-                   data.type === 'lending' ? 'Lending' : 
-                   data.type === 'liquid-staking' ? 'Liquid Staking' : 'CDP'}
-              </span>
-            </div>
-
-              <div className="flex items-center gap-4 mb-4">
-                {data.logo && (
-                  <div className="w-12 h-12 rounded-full bg-gray-50 border border-gray-100 p-1 flex-shrink-0 shadow-sm">
-                    <img 
-                      src={data.logo} 
-                      alt={`${data.name} logo`} 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                )}
-                <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
-              </div>
-              
-            {data.description && (
-                <p className="text-sm text-gray-600 leading-relaxed mb-4">
-                  {data.description}
-                </p>
-            )}
-
-              {/* Website & Twitter Links */}
-            {(data.website || data.twitter) && (
-                <div className="flex items-center gap-3 mb-4">
-                {data.website && (
-                  <a 
-                    href={data.website} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                      className="text-xs text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-1.5 hover:underline transition-colors"
-                  >
-                      <span>🌐</span> Website
-                  </a>
-                )}
-                {data.twitter && (
-                  <a 
-                    href={data.twitter.startsWith('http') ? data.twitter : `https://twitter.com/${data.twitter.replace('@', '')}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                      className="text-xs text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-1.5 hover:underline transition-colors"
-                  >
-                      <span>🐦</span> Twitter
-                  </a>
-                )}
-              </div>
-            )}
-            
-              {/* Growth Momentum Indicator */}
-              {data.current.change30d !== undefined && data.current.change30d !== null && (
-                <div className="mb-4 pb-4 border-b border-gray-100">
-                  <div className="flex items-center gap-2">
-                    <span className="text-lg">
-                      {data.current.change30d > 2 ? '📈' : data.current.change30d < -2 ? '📉' : '➡️'}
-                    </span>
-                    <div>
-                      <div className="text-xs text-gray-400 uppercase tracking-wider font-medium">30-Day Trend</div>
-                      <div className={`text-sm font-bold ${
-                        data.current.change30d > 2 ? 'text-emerald-600' :
-                        data.current.change30d < -2 ? 'text-rose-600' : 'text-blue-600'
-                      }`}>
-                        {data.current.change30d > 2 && 'Gaining Momentum'}
-                        {data.current.change30d < -2 && 'Losing Steam'}
-                        {data.current.change30d >= -2 && data.current.change30d <= 2 && 'Holding Steady'}
-                        <span className="text-xs ml-1 font-normal">
-                          ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d avg)
-                        </span>
-                </div>
-              </div>
-                </div>
-              </div>
-              )}
-              
-              {/* Quick Stats List */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-500 mt-1">Total TVL</span>
-                  <div className="text-right">
-                    <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.tvl)}</div>
-                    {data.historicalMetrics && (
-                       <div className={`text-xs font-bold ${
-                         data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)
-                           ? 'text-emerald-600'
-                           : 'text-rose-600'
-                       }`}>
-                         {data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length) ? '↑' : '↓'}
-                         {Math.abs(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}% vs 90d avg
+        
+        {/* HEADER SECTION - Compact for better mobile hierarchy */}
+        <div className="mb-6 space-y-4">
+          <div className="flex flex-col md:flex-row md:items-start gap-4">
+            <div className="flex items-center gap-4">
+              {data.logo && (
+                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gray-50 border border-gray-100 p-1 flex-shrink-0 shadow-sm">
+                  <img 
+                    src={data.logo} 
+                    alt={`${data.name} logo`} 
+                    className="w-full h-full rounded-full object-cover"
+                  />
                 </div>
               )}
-                  </div>
-                </div>
-
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-500 mt-1">24h Fees</span>
-                  <div className="text-right">
-                    <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.fees)}</div>
-                    {data.historicalMetrics && (
-                       <div className={`text-xs font-bold ${
-                         data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)
-                           ? 'text-emerald-600'
-                           : 'text-rose-600'
-                       }`}>
-                         {data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length) ? '↑' : '↓'}
-                         {Math.abs(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}% vs 90d avg
-                    </div>
-                    )}
-                  </div>
+              <div className="space-y-1">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 leading-tight">{data.name}</h1>
+                  <span className={`px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-bold uppercase tracking-wider ${
+                    data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
+                    data.type === 'lending' ? 'bg-green-50 text-green-700' : 
+                    data.type === 'liquid-staking' ? 'bg-amber-50 text-amber-700' : 'bg-purple-50 text-purple-700'
+                  }`}>
+                    {data.type === 'dex' ? 'DEX' : 
+                     data.type === 'lending' ? 'Lending' : 
+                     data.type === 'liquid-staking' ? 'Liquid Staking' : 'CDP'}
+                  </span>
                 </div>
                 
-                {data.type === 'dex' && (
-                  <>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm font-medium text-gray-500 mt-1">24h Volume</span>
-                      <div className="text-right">
-                        <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.volume)}</div>
-                         {data.historicalMetrics && (
-                           <div className={`text-xs font-bold ${
-                             data.current.volume >= (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)
-                               ? 'text-emerald-600'
-                               : 'text-rose-600'
-                           }`}>
-                             {data.current.volume >= (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length) ? '↑' : '↓'}
-                             {Math.abs(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}% vs 90d avg
-                    </div>
-                        )}
-                  </div>
-                    </div>
-                    {data.current.dexMetrics && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-500">Cap. Efficiency</span>
-                        <span className="text-base font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
-                  </div>
+                {(data.website || data.twitter) && (
+                  <div className="flex items-center gap-3">
+                    {data.website && (
+                      <a 
+                        href={data.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-1 hover:underline"
+                      >
+                        <span>🌐</span> Website
+                      </a>
                     )}
-                  </>
-                )}
-
-        {data.type === 'liquid-staking' && (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">Staked Assets</span>
-                      <span className="text-base font-bold text-gray-900">{formatCurrency(data.current.tvl)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">Daily Revenue</span>
-                      <span className="text-base font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
-                    </div>
-                  </>
-                )}
-
-        {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">Utilization</span>
-                      <span className="text-base font-bold text-gray-900">{data.current.lendingMetrics.utilization.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">
-                        {data.type === 'cdp' ? 'Minted' : 'Borrowed'}
-                      </span>
-                      <span className="text-base font-bold text-gray-900">
-                      {formatCurrency(data.current.lendingMetrics.borrowVolume)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">
-                         {data.type === 'cdp' ? 'Collateral' : 'Supplied'}
-                      </span>
-                      <span className="text-base font-bold text-gray-900">
-                        {formatCurrency(data.current.lendingMetrics.supplyVolume)}
-                      </span>
+                    {data.twitter && (
+                      <a 
+                        href={data.twitter.startsWith('http') ? data.twitter : `https://twitter.com/${data.twitter.replace('@', '')}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-1 hover:underline"
+                      >
+                        <span>🐦</span> Twitter
+                      </a>
+                    )}
                   </div>
-                  </>
                 )}
+              </div>
+            </div>
 
-                {data.historicalMetrics && (
-                   <div className="pt-4 mt-4 border-t border-gray-100">
-                     <span className="text-xs text-gray-400 block mb-2 uppercase tracking-wider">90-Day Averages</span>
-                     <div className="space-y-2">
-                       <div className="flex justify-between items-center">
-                         <span className="text-xs font-medium text-gray-500">Avg Fees</span>
-                         <span className="text-sm font-semibold text-gray-700">
-                           {formatCurrency(data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)}
-                         </span>
-                    </div>
-                       {data.type === 'dex' && (
-                         <div className="flex justify-between items-center">
-                           <span className="text-xs font-medium text-gray-500">Avg Volume</span>
-                           <span className="text-sm font-semibold text-gray-700">
-                             {formatCurrency(data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)}
-                           </span>
-                    </div>
-                       )}
-                       <div className="flex justify-between items-center">
-                         <span className="text-xs font-medium text-gray-500">Avg TVL</span>
-                         <span className="text-sm font-semibold text-gray-700">
-                           {formatCurrency(data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)}
-                         </span>
-                    </div>
-                  </div>
-                   </div>
-                )}
+            {data.description && (
+              <p className="text-sm text-gray-600 leading-relaxed max-w-3xl hidden sm:block md:mt-1">
+                {data.description}
+              </p>
+            )}
+          </div>
+          {/* Mobile description only */}
+          {data.description && (
+            <p className="text-sm text-gray-600 leading-relaxed sm:hidden">
+              {data.description}
+            </p>
+          )}
+        </div>
 
-                {data.versionsTracked && data.versionsTracked.length > 0 && (
-                  <div className="pt-4 mt-4 border-t border-gray-100">
-                    <span className="text-xs text-gray-400 block mb-2 uppercase tracking-wider">TRACKED VERSIONS</span>
-                    <div className="flex flex-wrap gap-2">
-                      {data.versionsTracked.map((v: string) => (
-                        <span key={v} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
-                          {v.split('-').pop()?.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
-                    </div>
-                )}
-                    </div>
-                  </div>
-
-            {/* Weighting Schema Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Scoring Weights</h3>
-                <InfoTooltip content="How this protocol is scored relative to its peers." position="top" />
-                    </div>
-              <div className="space-y-3">
-                {weights.map((w) => (
-                  <div key={w.name} className="group">
-                    <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
-                      <span>{w.name}</span>
-                      <span style={{ color: w.color }}>{w.value}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-500 ease-out" 
-                        style={{ width: `${w.value}%`, backgroundColor: w.color }}
-                      />
-                    </div>
-                    </div>
-                ))}
-                  </div>
-                </div>
-          </aside>
-
-          {/* RIGHT CONTENT - CHARTS & ANALYSIS */}
-          <main className="lg:col-span-8 xl:col-span-9 space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-8">
+          
+          {/* MAIN CONTENT */}
+          <main className="lg:col-span-8 xl:col-span-9 space-y-6 lg:order-2">
             
-            {/* Hero Score Card */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100">
-                {/* Main Score */}
-                <div className="p-6 sm:p-8 flex flex-col justify-center bg-gradient-to-br from-[#49997E]/5 to-transparent relative">
-                  <div className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 relative z-10">
-                    SPT Score
-                    <InfoTooltip content="Composite score (0-1) based on weighted, normalized metrics." position="right" />
-                    </div>
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-6xl font-black text-[#49997E] tracking-tight">
-                      {data?.current?.score !== undefined ? data.current.score.toFixed(4) : 'N/A'}
-                    </span>
-                    <span className={`px-3 py-1 rounded-lg text-lg font-bold ${rating.color}`}>
-                      {rating.label}
-                    </span>
-                    </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <span className={`text-sm font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+            {/* BENTO GRID - Score & Key Stats */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+              {/* 1. Score Card (Primary) */}
+              <div className="lg:col-span-5 bg-white rounded-3xl border border-gray-200 shadow-lg p-6 flex flex-col justify-center relative overflow-hidden bg-gradient-to-br from-[#49997E]/5 to-transparent">
+                <div className="flex items-center gap-2 text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                  SPT Score
+                  <InfoTooltip content="Composite score (0-1) based on weighted, normalized metrics." position="right" />
+                </div>
+                <div className="flex items-baseline gap-3 mb-4">
+                  <span className="text-5xl sm:text-6xl font-black text-[#49997E] tracking-tight">
+                    {data?.current?.score !== undefined ? data.current.score.toFixed(4) : 'N/A'}
+                  </span>
+                  <span className={`px-3 py-1 rounded-lg text-lg font-bold ${rating.color}`}>
+                    {rating.label}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 bg-white/60 w-fit px-3 py-1.5 rounded-lg backdrop-blur-sm border border-gray-100">
+                   <span className={`text-sm font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {formatChange(data.current.change30d)}
-                    </span>
-                    <span className="text-xs text-gray-400 font-medium">vs 30d avg</span>
-                    </div>
-                  </div>
+                   </span>
+                   <span className="text-xs text-gray-500 font-medium">vs 30d avg</span>
+                </div>
+              </div>
 
-                {/* Changes Grid */}
-                <div className="lg:col-span-2 p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-gray-900">Performance Momentum</h3>
-                    {data.current.momentum && (
-                       <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                         data.current.momentum === 'growing' ? 'bg-emerald-100 text-emerald-700' :
-                         data.current.momentum === 'declining' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'
-                       }`}>
-                         {data.current.momentum} Trend
-                       </span>
-                    )}
-                    </div>
-                  <div className="grid grid-cols-3 gap-6">
-                    <div>
-                      <div className="text-xs text-gray-400 font-medium mb-1">24H CHANGE</div>
-                      <div className={`text-xl font-bold ${data.current.change24h && data.current.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {formatChange(data.current.change24h)}
-                    </div>
-                  </div>
-                    <div>
-                      <div className="text-xs text-gray-400 font-medium mb-1">7D CHANGE</div>
-                      <div className={`text-xl font-bold ${data.current.change7d && data.current.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {formatChange(data.current.change7d)}
-                    </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-400 font-medium mb-1">30D CHANGE</div>
-                      <div className={`text-xl font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {formatChange(data.current.change30d)}
+              {/* 2. Key Metrics Grid (Context) */}
+              <div className="lg:col-span-7 grid grid-cols-2 gap-3 sm:gap-4">
+                {/* TVL */}
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                   <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Total TVL</div>
+                   <div className="text-lg sm:text-xl font-bold text-gray-900">{formatCurrency(data.current.tvl)}</div>
+                   {data.historicalMetrics && (
+                      <div className={`text-[10px] sm:text-xs font-bold flex items-center gap-1 mt-1 ${
+                        data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)
+                          ? 'text-emerald-600' : 'text-rose-600'
+                      }`}>
+                        {data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length) ? '↑' : '↓'}
+                        {Math.abs(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}% vs avg
+                      </div>
+                   )}
+                </div>
+
+                {/* Fees */}
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                   <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">24h Fees</div>
+                   <div className="text-lg sm:text-xl font-bold text-gray-900">{formatCurrency(data.current.fees)}</div>
+                   {data.historicalMetrics && (
+                      <div className={`text-[10px] sm:text-xs font-bold flex items-center gap-1 mt-1 ${
+                        data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)
+                          ? 'text-emerald-600' : 'text-rose-600'
+                      }`}>
+                        {data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length) ? '↑' : '↓'}
+                        {Math.abs(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}% vs avg
+                      </div>
+                   )}
+                </div>
+
+                {/* Activity (Vol or Util) */}
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                  {(data.type === 'dex' || data.type === 'liquid-staking') ? (
+                    <>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">24h Volume</div>
+                      <div className="text-lg sm:text-xl font-bold text-gray-900">{formatCurrency(data.current.volume)}</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Utilization</div>
+                      <div className="text-lg sm:text-xl font-bold text-gray-900">
+                        {data.current.lendingMetrics ? `${data.current.lendingMetrics.utilization.toFixed(1)}%` : 'N/A'}
+                      </div>
+                    </>
+                  )}
+                  <div className="text-[10px] sm:text-xs text-gray-400 font-medium mt-1">
+                    {data.type === 'dex' || data.type === 'liquid-staking' ? 'Trading Activity' : 'Capital Efficiency'}
                   </div>
                 </div>
-                  </div>
+
+                {/* Momentum Trend */}
+                <div className="bg-white p-4 rounded-2xl border border-gray-100 shadow-sm flex flex-col justify-center">
+                   <div className="text-[10px] sm:text-xs text-gray-500 font-bold uppercase tracking-wider mb-1">Momentum</div>
+                   <div className="flex items-center gap-2">
+                      <span className={`text-lg sm:text-xl font-bold ${
+                        data.current.momentum === 'growing' ? 'text-emerald-600' :
+                        data.current.momentum === 'declining' ? 'text-rose-600' : 'text-blue-600'
+                      }`}>
+                        {data.current.momentum ? (data.current.momentum.charAt(0).toUpperCase() + data.current.momentum.slice(1)) : 'Stable'}
+                      </span>
+                   </div>
+                   <div className="text-[10px] sm:text-xs text-gray-400 font-medium mt-1">
+                     Trend Strength
+                   </div>
                 </div>
               </div>
             </div>
@@ -725,8 +571,8 @@ export default function ProtocolDetailPage() {
                     <p>No chart data available</p>
                   </div>
                 )}
+              </div>
             </div>
-          </div>
 
             {/* Deep Dive Metrics Grid */}
             <div className="grid md:grid-cols-2 gap-6">
@@ -858,6 +704,49 @@ export default function ProtocolDetailPage() {
           </div>
 
           </main>
+
+          {/* SIDEBAR - Weights & Versions (Second on Mobile) */}
+          <aside className="lg:col-span-4 xl:col-span-3 space-y-6 lg:order-1">
+            
+            {/* Weighting Schema Card */}
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Scoring Weights</h3>
+                <InfoTooltip content="How this protocol is scored relative to its peers." position="top" />
+              </div>
+              <div className="space-y-3">
+                {weights.map((w) => (
+                  <div key={w.name} className="group">
+                    <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
+                      <span>{w.name}</span>
+                      <span style={{ color: w.color }}>{w.value}%</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500 ease-out" 
+                        style={{ width: `${w.value}%`, backgroundColor: w.color }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Versions Tracked */}
+            {data.versionsTracked && data.versionsTracked.length > 0 && (
+              <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-sm">
+                <span className="text-xs text-gray-400 block mb-3 uppercase tracking-wider font-bold">TRACKED VERSIONS</span>
+                <div className="flex flex-wrap gap-2">
+                  {data.versionsTracked.map((v: string) => (
+                    <span key={v} className="px-2.5 py-1.5 bg-gray-50 text-gray-600 rounded-md text-xs font-medium border border-gray-100">
+                      {v.split('-').pop()?.toUpperCase()}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </aside>
         </div>
       </div>
     </div>
