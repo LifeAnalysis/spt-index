@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, ReferenceLine } from 'recharts';
 import InfoTooltip from '../../components/InfoTooltip';
 import { ProtocolDetail } from '../../types';
 import { formatCurrency, getScoreRating } from '../../utils';
@@ -28,8 +28,11 @@ export default function ProtocolDetailPage() {
       setLoading(true);
       setError(null);
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spt-index-production.up.railway.app';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
       
+      // Fetch both endpoints in parallel
+      // 1. Protocol detail for historical data and metrics
+      // 2. Main SPT index for cohort-based score (cross-protocol comparison)
       const headers: HeadersInit = {};
       if (etag) {
         headers['If-None-Match'] = etag;
@@ -40,7 +43,9 @@ export default function ProtocolDetailPage() {
         fetch(`${API_URL}/api/spt`)
       ]);
       
+      // If 304 Not Modified, data hasn't changed
       if (detailRes.status === 304) {
+        console.log(`✅ Protocol ${slug} data unchanged (304 Not Modified) - using cached data`);
         setLoading(false);
         return;
       }
@@ -48,6 +53,7 @@ export default function ProtocolDetailPage() {
       if (!detailRes.ok) throw new Error('Protocol not found');
       if (!indexRes.ok) throw new Error('Failed to fetch SPT index');
       
+      // Store new ETag for next request
       const newEtag = detailRes.headers.get('ETag');
       if (newEtag) {
         setEtag(newEtag);
@@ -56,14 +62,16 @@ export default function ProtocolDetailPage() {
       const detailData = await detailRes.json();
       const indexData = await indexRes.json();
       
+      // Find this protocol in the index to get cohort-based score
       const allProtocols = [...(indexData.dex || []), ...(indexData.lending || [])];
       const cohortData = allProtocols.find((p: any) => p.slug === slug);
       
+      // Merge: use cohort score from index, keep everything else from detail
       const mergedData = {
         ...detailData,
         current: {
           ...detailData.current,
-          score: cohortData?.score || detailData.current.score,
+          score: cohortData?.score || detailData.current.score, // Use cohort-based score
           change24h: cohortData?.change24h || detailData.current.change24h,
           change7d: cohortData?.change7d || detailData.current.change7d,
           change30d: cohortData?.change30d || detailData.current.change30d,
@@ -71,12 +79,26 @@ export default function ProtocolDetailPage() {
         }
       };
       
+      console.log(`✅ Loaded ${slug}:`, {
+        cohortScore: cohortData?.score?.toFixed(4),
+        change24h: cohortData?.change24h?.toFixed(2) + '%',
+        change7d: cohortData?.change7d?.toFixed(2) + '%',
+        momentum: cohortData?.momentum
+      });
+      
       setData(mergedData);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatDate = (timestamp: number) => {
+    return new Date(timestamp * 1000).toLocaleDateString('en-US', { 
+      month: 'short', 
+      day: 'numeric' 
+    });
   };
 
   const formatChange = (change: number | null | undefined) => {
@@ -88,32 +110,84 @@ export default function ProtocolDetailPage() {
 
   const filterHistoryByRange = () => {
     if (!data?.history) return [];
+    
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
     const cutoff = Date.now() / 1000 - (days * 86400);
+    
     return data.history
       .filter(point => point.timestamp >= cutoff)
       .map(point => ({
         ...point,
-        dateStr: point.date
+        dateStr: point.date // Already formatted as YYYY-MM-DD from backend
       }));
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#49997E]"></div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-[#49997E] mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading protocol data...</p>
+        </div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-        <div className="text-4xl mb-4">😕</div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Protocol Not Found</h2>
-        <button onClick={() => router.push('/')} className="text-[#49997E] hover:underline">
-          Back to Dashboard
-        </button>
+      <div className="min-h-screen bg-gray-50">
+        <nav className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50">
+          {/* Mobile Header - Just Back Arrow */}
+          <div className="md:hidden container mx-auto px-3 py-3">
+            <button
+              onClick={() => router.push('/')}
+              className="flex items-center gap-1 text-gray-600 hover:text-[#49997E] transition-colors"
+            >
+              <span className="text-xl">←</span>
+            </button>
+          </div>
+          
+          {/* Desktop Header */}
+          <div className="hidden md:block container mx-auto px-4 py-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors"
+                >
+                  <span className="mr-2">←</span>
+                  <span className="text-sm font-medium">Dashboard</span>
+                </button>
+                <div className="h-4 w-px bg-gray-300"></div>
+                <div>
+                  <h1 className="text-xl font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
+                    SPT Index
+                  </h1>
+                  <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
+                </div>
+              </div>
+              <button
+                onClick={() => router.push('/about')}
+                className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
+              >
+                About
+              </button>
+            </div>
+          </div>
+        </nav>
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="text-center bg-white rounded-xl border border-gray-200 p-12 shadow-sm">
+            <div className="text-5xl mb-4">⚠️</div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Protocol Not Found</h1>
+            <p className="text-gray-600 mb-6">{error || 'The protocol you are looking for does not exist.'}</p>
+            <button
+              onClick={() => router.push('/')}
+              className="px-6 py-2 bg-gradient-to-r from-[#49997E] to-[#5eb896] text-white rounded-lg hover:from-[#3d8268] hover:to-[#49997E] transition-all shadow-sm"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -121,50 +195,42 @@ export default function ProtocolDetailPage() {
   const chartData = filterHistoryByRange();
   const rating = data?.current?.score !== undefined ? getScoreRating(data.current.score) : { label: 'N/A', color: 'text-gray-500 bg-gray-100' };
 
-  // Helper to get metric weights based on type
-  const getWeights = () => {
-    if (data.type === 'dex') {
-      return [
-        { name: 'Volume', value: 40, color: '#3b82f6' },
-        { name: 'Efficiency', value: 30, color: '#8b5cf6' },
-        { name: 'Revenue', value: 20, color: '#10b981' },
-        { name: 'Growth', value: 10, color: '#f59e0b' }
-      ];
-    } else if (data.type === 'cdp') {
-      return [
-        { name: 'Minting', value: 40, color: '#3b82f6' },
-        { name: 'Collateral', value: 25, color: '#8b5cf6' },
-        { name: 'Util', value: 20, color: '#f59e0b' },
-        { name: 'Revenue', value: 15, color: '#10b981' }
-      ];
-    } else {
-      return [
-        { name: 'Borrow', value: 40, color: '#3b82f6' },
-        { name: 'Vanilla', value: 25, color: '#8b5cf6' },
-        { name: 'Util', value: 20, color: '#f59e0b' },
-        { name: 'Revenue', value: 15, color: '#10b981' }
-      ];
-    }
-  };
-
-  const weights = getWeights();
-
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
-        <div className="container mx-auto px-4 sm:px-6 py-3">
+    <div className="min-h-screen bg-gray-50">
+      {/* Sticky Navigation */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        {/* Mobile Header - Just Back Arrow */}
+        <div className="md:hidden container mx-auto px-3 py-3">
+          <button
+            onClick={() => router.push('/')}
+            className="flex items-center gap-1 text-gray-600 hover:text-[#49997E] transition-colors"
+          >
+            <span className="text-xl">←</span>
+          </button>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden md:block container mx-auto px-4 py-3">
           <div className="flex justify-between items-center">
-            <button
-              onClick={() => router.push('/')}
-              className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors group"
-            >
-              <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
-              <span className="text-sm font-medium">Dashboard</span>
-            </button>
-            <h1 className="text-lg font-bold text-gray-900">SPT Index</h1>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={() => router.push('/')}
+                className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors"
+              >
+                <span className="mr-2">←</span>
+                <span className="text-sm font-medium">Dashboard</span>
+              </button>
+              <div className="h-4 w-px bg-gray-300"></div>
+              <div>
+                <h1 className="text-xl font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
+                  SPT Index
+                </h1>
+                <p className="text-xs text-gray-500">Protocol Performance Analytics</p>
+              </div>
+            </div>
             <button
               onClick={() => router.push('/about')}
-              className="text-sm text-gray-600 hover:text-[#49997E] transition-colors"
+              className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-sm font-medium transition-all"
             >
               About
             </button>
@@ -172,484 +238,761 @@ export default function ProtocolDetailPage() {
         </div>
       </nav>
 
-      <div className="container mx-auto px-4 sm:px-6 py-8 max-w-[1400px]">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          {/* LEFT SIDEBAR - INFO & METADATA */}
-          <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
-            {/* Identity Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow sticky top-24">
-              <div className="flex items-center justify-between mb-6">
-                <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                  data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
-                  data.type === 'lending' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'
-                }`}>
-                  {data.type === 'dex' ? 'DEX' : data.type === 'lending' ? 'Lending' : 'CDP'}
-                </span>
-                <div className="flex gap-3">
+      <div className="container mx-auto px-3 sm:px-4 lg:px-6 py-4 sm:py-6 lg:py-8 max-w-7xl animate-fade-in">
+        {/* Protocol Header - Improved Layout */}
+        <section className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="bg-gradient-to-br from-[#49997E]/10 via-blue-50 to-purple-50 rounded-xl lg:rounded-2xl border-2 border-gray-200 shadow-lg overflow-hidden">
+            <div className="px-4 sm:px-6 lg:px-8 py-5 sm:py-6 lg:py-8">
+              {/* Title Row with Type Badge */}
+              <div className="flex items-start justify-between gap-3 mb-4 sm:mb-5">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-3 mb-2">
+                    <h1 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 truncate">{data.name}</h1>
+                    <span className="px-3 py-1 sm:px-4 sm:py-1.5 bg-white text-gray-700 rounded-lg text-xs sm:text-sm font-bold border-2 border-gray-300 whitespace-nowrap flex-shrink-0 shadow-sm">
+                      {data.type === 'dex' ? '🔄 DEX' : (data.type === 'cdp' ? '🏦 CDP' : '💰 Lending')}
+                    </span>
+                  </div>
+                  
+                  {data.versionsTracked && data.versionsTracked.length > 0 && (
+                    <p className="text-xs sm:text-sm text-gray-600 font-medium">
+                      Tracking: {data.versionsTracked.map((v: string) => {
+                        const versionPart = v.split('-').pop() || v;
+                        return versionPart.toUpperCase();
+                      }).join(', ')}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Description */}
+              {data.description && (
+                <p className="text-sm sm:text-base lg:text-lg text-gray-700 leading-relaxed mb-4 sm:mb-5">{data.description}</p>
+              )}
+
+              {/* Links */}
+              {(data.website || data.twitter) && (
+                <div className="flex items-center gap-3 sm:gap-4 mb-5 sm:mb-6">
                   {data.website && (
-                    <a href={data.website} target="_blank" rel="noopener" className="text-gray-400 hover:text-[#49997E] transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
+                    <a 
+                      href={data.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm sm:text-base text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-2 hover:underline transition-colors"
+                    >
+                      <span className="text-lg">🌐</span> Website
                     </a>
                   )}
                   {data.twitter && (
-                    <a href={data.twitter} target="_blank" rel="noopener" className="text-gray-400 hover:text-[#49997E] transition-colors">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                    <a 
+                      href={data.twitter.startsWith('http') ? data.twitter : `https://twitter.com/${data.twitter.replace('@', '')}`} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-sm sm:text-base text-[#49997E] hover:text-[#3d8268] font-medium flex items-center gap-2 hover:underline transition-colors"
+                    >
+                      <span className="text-lg">🐦</span> Twitter
                     </a>
                   )}
                 </div>
-              </div>
-              
-              <div className="flex items-center gap-4 mb-4">
-                {data.logo && (
-                  <div className="w-12 h-12 rounded-full bg-gray-50 border border-gray-100 p-1 flex-shrink-0 shadow-sm">
-                    <img 
-                      src={data.logo} 
-                      alt={`${data.name} logo`} 
-                      className="w-full h-full rounded-full object-cover"
-                    />
-                  </div>
-                )}
-                <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
-              </div>
-              
-              {data.description && (
-                <p className="text-sm text-gray-600 leading-relaxed mb-6 border-b border-gray-100 pb-6">
-                  {data.description}
-                </p>
               )}
               
-              {/* Quick Stats List */}
-              <div className="space-y-4">
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-500 mt-1">Total TVL</span>
-                  <div className="text-right">
-                    <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.tvl)}</div>
-                    {data.historicalMetrics && (
-                       <div className={`text-xs font-bold ${
-                         data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)
-                           ? 'text-emerald-600'
-                           : 'text-rose-600'
-                       }`}>
-                         {data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length) ? '↑' : '↓'}
-                         {Math.abs(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}% vs 90d
-                       </div>
-                    )}
+              {/* Key Metrics Grid - Improved Layout */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xl sm:text-2xl">💰</span>
+                    <span className="text-xs sm:text-sm text-gray-600 font-medium">Total Value Locked</span>
                   </div>
+                  <div className="font-bold text-gray-900 text-lg sm:text-xl lg:text-2xl">{formatCurrency(data.current.tvl)}</div>
                 </div>
-
-                <div className="flex justify-between items-start">
-                  <span className="text-sm font-medium text-gray-500 mt-1">24h Fees</span>
-                  <div className="text-right">
-                    <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.fees)}</div>
-                    {data.historicalMetrics && (
-                       <div className={`text-xs font-bold ${
-                         data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)
-                           ? 'text-emerald-600'
-                           : 'text-rose-600'
-                       }`}>
-                         {data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length) ? '↑' : '↓'}
-                         {Math.abs(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}% vs 90d
-                       </div>
-                    )}
+                
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xl sm:text-2xl">💵</span>
+                    <span className="text-xs sm:text-sm text-gray-600 font-medium">24h Fees</span>
                   </div>
+                  <div className="font-bold text-gray-900 text-lg sm:text-xl lg:text-2xl">{formatCurrency(data.current.fees)}</div>
                 </div>
                 
                 {data.type === 'dex' && (
-                  <>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm font-medium text-gray-500 mt-1">24h Volume</span>
-                      <div className="text-right">
-                        <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.volume)}</div>
-                         {data.historicalMetrics && (
-                           <div className={`text-xs font-bold ${
-                             data.current.volume >= (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)
-                               ? 'text-emerald-600'
-                               : 'text-rose-600'
-                           }`}>
-                             {data.current.volume >= (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length) ? '↑' : '↓'}
-                             {Math.abs(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}% vs 90d
-                           </div>
-                        )}
-                      </div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-xl sm:text-2xl">📊</span>
+                      <span className="text-xs sm:text-sm text-gray-600 font-medium">24h Volume</span>
                     </div>
-                    {data.current.dexMetrics && (
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium text-gray-500">Cap. Efficiency</span>
-                        <span className="text-base font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
-                  <>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">Utilization</span>
-                      <span className="text-base font-bold text-gray-900">{data.current.lendingMetrics.utilization.toFixed(1)}%</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">
-                        {data.type === 'cdp' ? 'Minted' : 'Borrowed'}
-                      </span>
-                      <span className="text-base font-bold text-gray-900">
-                        {formatCurrency(data.current.lendingMetrics.borrowVolume)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">
-                         {data.type === 'cdp' ? 'Collateral' : 'Supplied'}
-                      </span>
-                      <span className="text-base font-bold text-gray-900">
-                        {formatCurrency(data.current.lendingMetrics.supplyVolume)}
-                      </span>
-                    </div>
-                  </>
-                )}
-
-                {data.historicalMetrics && (
-                   <div className="pt-4 mt-4 border-t border-gray-100">
-                     <span className="text-xs text-gray-400 block mb-2 uppercase tracking-wider">90-Day Averages</span>
-                     <div className="space-y-2">
-                       <div className="flex justify-between items-center">
-                         <span className="text-xs font-medium text-gray-500">Avg Fees</span>
-                         <span className="text-sm font-semibold text-gray-700">
-                           {formatCurrency(data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)}
-                         </span>
-                       </div>
-                       {data.type === 'dex' && (
-                         <div className="flex justify-between items-center">
-                           <span className="text-xs font-medium text-gray-500">Avg Volume</span>
-                           <span className="text-sm font-semibold text-gray-700">
-                             {formatCurrency(data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)}
-                           </span>
-                         </div>
-                       )}
-                       <div className="flex justify-between items-center">
-                         <span className="text-xs font-medium text-gray-500">Avg TVL</span>
-                         <span className="text-sm font-semibold text-gray-700">
-                           {formatCurrency(data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)}
-                         </span>
-                       </div>
-                     </div>
-                   </div>
-                )}
-
-                {data.versionsTracked && data.versionsTracked.length > 0 && (
-                  <div className="pt-4 mt-4 border-t border-gray-100">
-                    <span className="text-xs text-gray-400 block mb-2 uppercase tracking-wider">TRACKED VERSIONS</span>
-                    <div className="flex flex-wrap gap-2">
-                      {data.versionsTracked.map((v: string) => (
-                        <span key={v} className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium border border-gray-200">
-                          {v.split('-').pop()?.toUpperCase()}
-                        </span>
-                      ))}
-                    </div>
+                    <div className="font-bold text-gray-900 text-lg sm:text-xl lg:text-2xl">{formatCurrency(data.current.volume)}</div>
                   </div>
                 )}
+                
+                <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-xl sm:text-2xl">⚡</span>
+                    <span className="text-xs sm:text-sm text-gray-600 font-medium">Efficiency</span>
+                  </div>
+                  <div className="font-bold text-gray-900 text-lg sm:text-xl lg:text-2xl">
+                    {data?.current?.fees !== undefined && data?.current?.tvl !== undefined && data.current.tvl > 0
+                      ? data.type === 'dex' && data?.current?.volume !== undefined
+                        ? (((data.current.fees + data.current.volume) / data.current.tvl) * 100).toFixed(1)
+                        : ((data.current.fees / data.current.tvl) * 100).toFixed(1)
+                      : '—'
+                    }
+                    {data?.current?.fees !== undefined && data?.current?.tvl !== undefined && data.current.tvl > 0 && '%'}
+                  </div>
+                </div>
               </div>
             </div>
+          </div>
+        </section>
 
-            {/* Weighting Schema Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="flex items-center gap-2 mb-4">
-                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider">Scoring Weights</h3>
-                <InfoTooltip content="How this protocol is scored relative to its peers." position="top" />
-              </div>
-              <div className="space-y-3">
-                {weights.map((w) => (
-                  <div key={w.name} className="group">
-                    <div className="flex justify-between text-xs font-medium text-gray-600 mb-1">
-                      <span>{w.name}</span>
-                      <span style={{ color: w.color }}>{w.value}%</span>
+        {/* Performance Overview - Improved 2-Column Layout */}
+        <section className="mb-4 sm:mb-6 lg:mb-8">
+          <div className="bg-white rounded-xl lg:rounded-2xl border-2 border-gray-200 shadow-lg overflow-hidden">
+            <div className="bg-gradient-to-r from-[#49997E]/10 to-blue-50 px-4 sm:px-6 lg:px-8 py-5 sm:py-6 lg:py-8">
+              <div className="grid lg:grid-cols-2 gap-6 lg:gap-8">
+                {/* Score & Rating Section */}
+                <div className="flex flex-col justify-center">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs sm:text-sm font-semibold text-gray-600 uppercase tracking-wider">SPT Score</span>
+                    <InfoTooltip 
+                      content="cross-protocol comparison score. measures operational efficiency against category peers."
+                      position="bottom"
+                      maxWidth="600px"
+                    />
+                  </div>
+                  <div className="flex items-center gap-4 sm:gap-6">
+                    <div className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[#49997E] tabular-nums">
+                      {data?.current?.score !== undefined ? data.current.score.toFixed(4) : '—'}
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full rounded-full transition-all duration-500 ease-out" 
-                        style={{ width: `${w.value}%`, backgroundColor: w.color }}
+                    <div className={`px-4 sm:px-5 py-2 sm:py-3 rounded-lg text-base sm:text-lg font-bold shadow-md ${rating.color}`}>
+                      {rating.label}
+                    </div>
+                  </div>
+                  {data.current.momentum && (
+                    <div className="mt-3 flex items-center gap-2">
+                      <span className="text-2xl sm:text-3xl">
+                        {data.current.momentum === 'growing' && '📈'}
+                        {data.current.momentum === 'declining' && '📉'}
+                        {data.current.momentum === 'stable' && '➡️'}
+                      </span>
+                      <span className="text-sm sm:text-base text-gray-600 font-medium capitalize">{data.current.momentum} Momentum</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Performance Changes Grid */}
+                <div className="grid grid-cols-3 gap-3 sm:gap-4">
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 text-center shadow-sm hover:shadow-md transition-shadow">
+                    <div className="text-xs sm:text-sm text-gray-600 font-semibold mb-2 uppercase tracking-wider">24 Hours</div>
+                    <div className={`text-lg sm:text-xl lg:text-2xl font-bold tabular-nums ${data.current.change24h && data.current.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {formatChange(data.current.change24h)}
+                    </div>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 text-center shadow-sm hover:shadow-md transition-shadow">
+                    <div className="text-xs sm:text-sm text-gray-600 font-semibold mb-2 uppercase tracking-wider">7 Days</div>
+                    <div className={`text-lg sm:text-xl lg:text-2xl font-bold tabular-nums ${data.current.change7d && data.current.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {formatChange(data.current.change7d)}
+                    </div>
+                  </div>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border-2 border-gray-200 text-center shadow-sm hover:shadow-md transition-shadow">
+                    <div className="text-xs sm:text-sm text-gray-600 font-semibold mb-2 uppercase tracking-wider">30 Days</div>
+                    <div className={`text-lg sm:text-xl lg:text-2xl font-bold tabular-nums ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {formatChange(data.current.change30d)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Protocol-Specific Metrics */}
+        {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
+          <section className="mb-3 sm:mb-6">
+            <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">{data.type === 'cdp' ? 'CDP Metrics' : 'Lending Metrics'}</h3>
+            <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                  {/* Borrow Volume */}
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Borrow Volume
+                      <InfoTooltip 
+                        content="Total value of assets currently borrowed. This is the primary revenue driver for lending protocols."
+                        position="top"
+                        maxWidth="400px"
                       />
                     </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.lendingMetrics.borrowVolume)}
+                    </div>
                   </div>
-                ))}
+
+                  {/* Vanilla Assets */}
+                  <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Vanilla Assets
+                      <InfoTooltip 
+                        content="Supply of USDC, USDT, DAI, ETH, and wBTC. These are the growth bottleneck for lending protocols."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.lendingMetrics.vanillaSupply)}
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      {data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}% of supply
+                    </div>
+                  </div>
+
+                  {/* Utilization Rate */}
+                  <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Utilization
+                      <InfoTooltip 
+                        content="Percentage of supplied capital that is actively borrowed. Higher = better capital efficiency."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {data.current.lendingMetrics.utilization.toFixed(1)}%
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      Overall
+                    </div>
+                  </div>
+
+                  {/* Vanilla Utilization */}
+                  <div className="p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Vanilla Util.
+                      <InfoTooltip 
+                        content="Utilization rate specifically for vanilla assets (USDC, ETH, etc). Shows how efficiently core assets are being used."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {data.current.lendingMetrics.vanillaUtilization.toFixed(1)}%
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      Key assets
+                    </div>
+                  </div>
+
+                  {/* Supply Volume */}
+                  <div className="p-3 bg-gradient-to-br from-gray-50 to-slate-50 rounded-lg border border-gray-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Total Supply
+                      <InfoTooltip 
+                        content="Total value of all assets deposited by lenders across all pools."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.lendingMetrics.supplyVolume)}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Key Insight */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="text-[10px] sm:text-xs font-semibold text-blue-900 mb-1">💡 Key Insight</div>
+                  <div className="text-[10px] sm:text-xs text-blue-800">
+                    This protocol has <strong>{formatCurrency(data.current.lendingMetrics.borrowVolume)}</strong> in active borrows, 
+                    with <strong>{data.current.lendingMetrics.vanillaSupplyRatio.toFixed(0)}%</strong> of supply in high-demand vanilla assets. 
+                    {data.current.lendingMetrics.utilization > 75 ? 
+                      " High utilization indicates strong demand and efficient capital use." : 
+                      data.current.lendingMetrics.utilization < 40 ?
+                      " Low utilization suggests excess idle capital or limited borrower demand." :
+                      " Moderate utilization suggests balanced supply and demand."}
+                  </div>
+                </div>
               </div>
             </div>
-          </aside>
+          </section>
+        )}
 
-          {/* RIGHT CONTENT - CHARTS & ANALYSIS */}
-          <main className="lg:col-span-8 xl:col-span-9 space-y-6">
-            
-            {/* Hero Score Card */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="grid md:grid-cols-2 lg:grid-cols-3 items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100">
-                {/* Main Score */}
-                <div className="p-8 flex flex-col justify-center bg-gradient-to-br from-[#49997E]/5 to-transparent relative">
-                  <div className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 relative z-10">
-                    SPT Score
-                    <InfoTooltip content="Composite score (0-1) based on weighted, normalized metrics." position="right" />
+        {data.type === 'dex' && data.current.dexMetrics && (
+          <section className="mb-3 sm:mb-6">
+            <h3 className="text-[10px] sm:text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2 px-1">DEX Metrics</h3>
+            <div className="bg-white rounded-lg sm:rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  {/* Trading Volume */}
+                  <div className="p-3 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      24h Volume
+                      <InfoTooltip 
+                        content="Total trading volume in the last 24 hours. This is the primary activity metric for DEXs."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.volume)}
+                    </div>
                   </div>
-                  <div className="flex items-baseline gap-4">
-                    <span className="text-6xl font-black text-[#49997E] tracking-tight">
-                      {data?.current?.score !== undefined ? data.current.score.toFixed(4) : '—'}
-                    </span>
-                    <span className={`px-3 py-1 rounded-lg text-lg font-bold ${rating.color}`}>
-                      {rating.label}
-                    </span>
+
+                  {/* Capital Efficiency */}
+                  <div className="p-3 bg-gradient-to-br from-emerald-50 to-green-50 rounded-lg border border-emerald-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Capital Efficiency
+                      <InfoTooltip 
+                        content="Volume/TVL ratio. Shows how well the protocol uses its liquidity. Higher = better."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {data.current.dexMetrics.capitalEfficiency.toFixed(3)}
+                    </div>
+                    <div className="text-[9px] sm:text-xs text-gray-500 mt-0.5">
+                      Vol/TVL
+                    </div>
                   </div>
-                  <div className="mt-4 flex items-center gap-2">
-                    <span className={`text-sm font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                      {formatChange(data.current.change30d)}
-                    </span>
-                    <span className="text-xs text-gray-400 font-medium">vs 30d avg</span>
+
+                  {/* TVL */}
+                  <div className="p-3 bg-gradient-to-br from-amber-50 to-orange-50 rounded-lg border border-amber-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      Total TVL
+                      <InfoTooltip 
+                        content="Total Value Locked - total liquidity available for trading."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.tvl)}
+                    </div>
+                  </div>
+
+                  {/* 24h Fees */}
+                  <div className="p-3 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100">
+                    <div className="text-[10px] sm:text-xs text-gray-600 font-medium mb-1 flex items-center gap-1">
+                      24h Fees
+                      <InfoTooltip 
+                        content="Trading fees generated in the last 24 hours. Shows protocol revenue."
+                        position="top"
+                        maxWidth="400px"
+                      />
+                    </div>
+                    <div className="text-base sm:text-xl font-bold text-gray-900">
+                      {formatCurrency(data.current.fees)}
+                    </div>
                   </div>
                 </div>
-
-                {/* Changes Grid */}
-                <div className="lg:col-span-2 p-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <h3 className="font-bold text-gray-900">Performance Momentum</h3>
-                    {data.current.momentum && (
-                       <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase ${
-                         data.current.momentum === 'growing' ? 'bg-emerald-100 text-emerald-700' :
-                         data.current.momentum === 'declining' ? 'bg-rose-100 text-rose-700' : 'bg-blue-100 text-blue-700'
-                       }`}>
-                         {data.current.momentum} Trend
-                       </span>
-                    )}
-                  </div>
-                  <div className="grid grid-cols-3 gap-6">
-                    <div>
-                      <div className="text-xs text-gray-400 font-medium mb-1">24H CHANGE</div>
-                      <div className={`text-xl font-bold ${data.current.change24h && data.current.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {formatChange(data.current.change24h)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-400 font-medium mb-1">7D CHANGE</div>
-                      <div className={`text-xl font-bold ${data.current.change7d && data.current.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {formatChange(data.current.change7d)}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-gray-400 font-medium mb-1">30D CHANGE</div>
-                      <div className={`text-xl font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {formatChange(data.current.change30d)}
-                      </div>
-                    </div>
+                
+                {/* Key Insight */}
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-100">
+                  <div className="text-[10px] sm:text-xs font-semibold text-blue-900 mb-1">💡 Key Insight</div>
+                  <div className="text-[10px] sm:text-xs text-blue-800">
+                    This DEX has a capital efficiency of <strong>{data.current.dexMetrics.capitalEfficiency.toFixed(3)}</strong>, 
+                    meaning every dollar of TVL facilitates <strong>${data.current.dexMetrics.capitalEfficiency.toFixed(2)}</strong> in daily trading volume. 
+                    {data.current.dexMetrics.capitalEfficiency > 0.5 ? 
+                      " Excellent capital efficiency indicates active trading and optimal liquidity deployment." : 
+                      data.current.dexMetrics.capitalEfficiency < 0.1 ?
+                      " Low capital efficiency suggests excess idle liquidity or limited trading activity." :
+                      " Moderate capital efficiency suggests balanced liquidity and trading activity."}
                   </div>
                 </div>
               </div>
             </div>
+          </section>
+        )}
 
-            {/* Main Chart Section */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow p-6 sm:p-8">
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-                <div>
-                  <h3 className="text-xl font-bold text-gray-900">Score Trajectory</h3>
-                  <p className="text-sm text-gray-500">Historical performance analysis</p>
-                </div>
-                <div className="flex items-center gap-3">
+        {/* Two Column Layout for Chart & Methodology */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-4 sm:mb-6 lg:mb-8">
+          {/* Historical Chart - Takes 2 columns */}
+          <div className="lg:col-span-2">
+            <div className="bg-white border-2 border-gray-200 rounded-xl lg:rounded-2xl shadow-lg overflow-hidden h-full">
+              <div className="border-b-2 border-gray-200 bg-gradient-to-r from-gray-50 to-blue-50 px-4 sm:px-6 lg:px-8 py-4 sm:py-5">
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4 mb-4">
+                  <div>
+                    <h4 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900">SPT Score Timeline</h4>
+                    <p className="text-xs sm:text-sm text-gray-600 mt-1">
+                      <span className="font-medium">
+                        {timeRange === '7d' ? 'Last 7 Days' : timeRange === '30d' ? 'Last 30 Days' : 'Last 90 Days'}
+                      </span>
+                      <span className="mx-2">•</span>
+                      <span>{chartData.length} data points</span>
+                    </p>
+                  </div>
+                  
+                  {/* Self-Trend Toggle - Prominent */}
                   <button
                     onClick={() => setShowMomentum(!showMomentum)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all border flex items-center gap-2 ${
+                    className={`px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all flex items-center gap-2 shadow-md hover:shadow-lg ${
                       showMomentum
-                        ? 'bg-orange-50 border-orange-200 text-orange-700'
-                        : 'bg-white border-gray-200 text-gray-500 hover:border-gray-300'
+                        ? 'bg-gradient-to-r from-orange-500 to-orange-600 text-white'
+                        : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 hover:border-orange-400'
                     }`}
+                    title={showMomentum ? 'Hide Self-Comparison Trend' : 'Show Self-Comparison Trend'}
                   >
-                    <span className={`w-2 h-2 rounded-full ${showMomentum ? 'bg-orange-500' : 'bg-gray-300'}`}></span>
-                    Self-Trend
+                    <span className={`w-2.5 h-2.5 rounded-full ${showMomentum ? 'bg-white' : 'bg-orange-500'}`}></span>
+                    <span>Self-Trend {showMomentum ? 'ON' : 'OFF'}</span>
                   </button>
-                  <div className="flex bg-gray-100 p-1 rounded-xl">
-                    {(['7d', '30d', '90d'] as const).map((range) => (
-                      <button
-                        key={range}
-                        onClick={() => setTimeRange(range)}
-                        className={`px-4 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                          timeRange === range
-                            ? 'bg-white text-gray-900 shadow-sm'
-                            : 'text-gray-500 hover:text-gray-700'
-                        }`}
-                      >
-                        {range.toUpperCase()}
-                      </button>
-                    ))}
-                  </div>
+                </div>
+                
+                {/* Time Range Buttons - Improved */}
+                <div className="flex gap-2">
+                  {(['7d', '30d', '90d'] as const).map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => setTimeRange(range)}
+                      className={`flex-1 px-4 py-2.5 rounded-lg text-xs sm:text-sm font-bold transition-all ${
+                        timeRange === range
+                          ? 'bg-gradient-to-r from-[#49997E] to-[#5eb896] text-white shadow-md'
+                          : 'bg-white text-gray-700 hover:bg-gray-50 border-2 border-gray-300 hover:border-[#49997E]/50'
+                      }`}
+                    >
+                      {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
+                    </button>
+                  ))}
                 </div>
               </div>
               
-              <div className="h-[400px] w-full">
+              <div className="p-6">
                 {chartData.length > 0 ? (
-                  <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                  <ResponsiveContainer width="100%" height={400}>
+                    <AreaChart data={chartData}>
                       <defs>
-                        <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#49997E" stopOpacity={0.2}/>
+                        <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#49997E" stopOpacity={0.3}/>
                           <stop offset="95%" stopColor="#49997E" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                       <XAxis 
                         dataKey="dateStr" 
                         stroke="#9ca3af"
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                        dy={10}
-                        minTickGap={30}
+                        style={{ fontSize: '11px' }}
+                        tick={{ fill: '#6b7280' }}
                       />
                       <YAxis 
                         stroke="#9ca3af"
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => value.toFixed(3)}
-                        domain={['auto', 'auto']}
-                        dx={-10}
+                        style={{ fontSize: '11px' }}
+                        tick={{ fill: '#6b7280' }}
+                        tickFormatter={(value) => value.toFixed(4)}
                       />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                          border: 'none',
-                          borderRadius: '12px',
-                          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
-                          padding: '12px 16px'
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: 'white', 
+                          border: '1px solid #e5e7eb',
+                          borderRadius: '8px',
+                          padding: '12px',
+                          boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
                         }}
-                        labelStyle={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}
                         formatter={(value: number, name: string) => {
-                          if (name === 'score') return [<span className="text-[#49997E] font-bold text-lg">{value.toFixed(4)}</span>, 'SPT Score'];
-                          if (name === 'momentumScore') return [<span className="text-orange-500 font-bold text-lg">{value.toFixed(4)}</span>, 'Self-Trend'];
-                          return [value.toFixed(4), name];
+                          if (name === 'score') return [value.toFixed(6), 'SPT Score'];
+                          if (name === 'momentumScore') return [value.toFixed(6), 'Self-Trend'];
+                          return [value.toFixed(6), name];
                         }}
+                        labelStyle={{ color: '#374151', fontWeight: 600, marginBottom: '4px' }}
                       />
                       <Area 
                         type="monotone" 
                         dataKey="score" 
                         stroke="#49997E" 
-                        strokeWidth={3} 
-                        fillOpacity={1} 
-                        fill="url(#colorScore)" 
-                        activeDot={{ r: 6, strokeWidth: 0, fill: '#49997E' }}
+                        strokeWidth={3}
+                        fill="url(#scoreGradient)"
                       />
+                      {/* Momentum Score Historical Line */}
                       {showMomentum && (
                         <Line 
                           type="monotone" 
                           dataKey="momentumScore" 
                           stroke="#f97316" 
-                          strokeWidth={2}
-                          strokeDasharray="4 4"
+                          strokeWidth={2.5}
                           dot={false}
                         />
                       )}
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
-                  <div className="h-full flex flex-col items-center justify-center text-gray-400">
-                    <span className="text-4xl mb-2">📉</span>
-                    <p>No chart data available</p>
+                  <div className="flex flex-col items-center justify-center h-96 text-gray-400">
+                    <div className="text-display">📊</div>
+                    <p className="text-body-sm">No historical data available</p>
+                    <p className="text-caption mt-1">Data collection in progress</p>
+                  </div>
+                )}
+                
+                {/* Chart Legend */}
+                {chartData.length > 0 && (
+                  <div className="mt-4 pt-4 border-t border-gray-200 flex flex-wrap gap-4 text-caption">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-0.5 bg-[#49997E] rounded"></div>
+                      <span className="text-gray-600">
+                        <strong className="text-gray-900">SPT Score:</strong> Cross-protocol comparison vs category peers
+                      </span>
+                    </div>
+                    {showMomentum && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-0.5 bg-orange-500 rounded"></div>
+                        <span className="text-gray-600">
+                          <strong className="text-orange-600">Self-Trend:</strong> Performance vs own 90-day baseline
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
             </div>
+          </div>
 
-            {/* Deep Dive Metrics Grid */}
-            <div className="grid md:grid-cols-2 gap-6">
-              {/* Detailed Metrics Panel */}
-              <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8">
-                <h3 className="text-lg font-bold text-gray-900 mb-6">
-                  {data.type === 'dex' ? 'Efficiency Metrics' : 'Capital Utilization'}
-                </h3>
-                
-                <div className="space-y-6">
-                  {data.type === 'dex' && data.current.dexMetrics ? (
-                    <>
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm text-gray-600">Capital Efficiency (Vol/TVL)</span>
-                          <span className="text-sm font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(data.current.dexMetrics.capitalEfficiency * 100, 100)}%` }}></div>
-                        </div>
-                        <p className="text-xs text-gray-500 mt-2">
-                          Higher is better. Indicates how much volume is generated per $1 of TVL.
-                        </p>
-                      </div>
-                      
-                      <div className="pt-4 border-t border-gray-100">
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Daily Revenue</span>
-                          <span className="text-sm font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
-                        </div>
-                      </div>
-                    </>
-                  ) : data.current.lendingMetrics ? (
-                    <>
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm text-gray-600">Utilization Rate</span>
-                          <span className="text-sm font-bold text-gray-900">{data.current.lendingMetrics.utilization.toFixed(1)}%</span>
-                        </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div className={`h-full rounded-full ${
-                            data.current.lendingMetrics.utilization > 80 ? 'bg-orange-500' : 'bg-blue-500'
-                          }`} style={{ width: `${data.current.lendingMetrics.utilization}%` }}></div>
-                        </div>
-                      </div>
-
-                      <div>
-                        <div className="flex justify-between mb-2">
-                          <span className="text-sm text-gray-600">
-                            {data.type === 'cdp' ? 'Blue-Chip Collateral' : 'Vanilla Supply'}
-                          </span>
-                          <span className="text-sm font-bold text-gray-900">
-                            {data.type === 'cdp' 
-                              ? data.current.lendingMetrics.bluechipCollateralRatio.toFixed(1) 
-                              : data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}%
-                          </span>
-                        </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                          <div className="h-full bg-green-500 rounded-full" style={{ 
-                            width: `${data.type === 'cdp' ? data.current.lendingMetrics.bluechipCollateralRatio : data.current.lendingMetrics.vanillaSupplyRatio}%` 
-                          }}></div>
-                        </div>
-                      </div>
-                    </>
-                  ) : null}
+          {/* Weighting Schema - Takes 1 column */}
+          <div className="lg:col-span-1">
+            <h3 className="text-label font-semibold text-gray-500 uppercase tracking-wider mb-3">Weighting Schema</h3>
+            <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 h-full">
+              <div className="mb-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="text-body-lg font-bold text-gray-900">
+                    {data.type === 'dex' ? 'DEX' : (data.type === 'cdp' ? 'CDP' : 'Lending')} Weights
+                  </h4>
+                  <InfoTooltip 
+                    content="protocol-specific weights for spt score calculation. dex and lending protocols use different metric priorities."
+                    position="bottom"
+                    maxWidth="600px"
+                  />
                 </div>
-              </div>
-
-              {/* Key Insight Panel */}
-              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-blue-100 p-6 sm:p-8 flex flex-col justify-center">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="bg-blue-600 text-white p-1.5 rounded-lg">
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                  </span>
-                  <h3 className="font-bold text-blue-900">Automated Insight</h3>
-                </div>
-                
-                <p className="text-blue-800 leading-relaxed text-sm sm:text-base">
-                  {data.type === 'dex' && data.current.dexMetrics ? (
-                    <>
-                      This protocol is operating with a capital efficiency of <strong>{data.current.dexMetrics.capitalEfficiency.toFixed(2)}x</strong>. 
-                      {data.current.dexMetrics.capitalEfficiency > 0.5 
-                        ? " This is exceptionally high, indicating highly efficient liquidity usage." 
-                        : " There may be room to improve liquidity utilization compared to top-tier peers."}
-                    </>
-                  ) : data.current.lendingMetrics ? (
-                    <>
-                      Utilization is currently at <strong>{data.current.lendingMetrics.utilization.toFixed(1)}%</strong>. 
-                      {data.current.lendingMetrics.utilization > 70 
-                        ? " High utilization suggests strong borrower demand but limited room for withdrawals."
-                        : " Lower utilization indicates ample liquidity but potentially inefficient capital deployment."}
-                    </>
-                  ) : "Data analysis pending for this protocol type."}
+                <p className="text-caption text-gray-600">
+                  Protocol-specific metric weighting
                 </p>
               </div>
-            </div>
+              
+              {data.type === 'dex' ? (
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">📊 Trading Volume</span>
+                    <span className="text-score-md text-blue-600">40%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">⚡ Capital Efficiency</span>
+                    <span className="text-score-md text-purple-600">30%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💵 Fee Revenue</span>
+                    <span className="text-score-md text-[#49997E]">20%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">📈 Fee Growth</span>
+                    <span className="text-score-md text-amber-600">10%</span>
+                  </div>
+                </div>
+              ) : data.type === 'cdp' ? (
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">🏦 Minted Stablecoin</span>
+                    <span className="text-score-md text-blue-600">40%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💎 Blue-chip Collateral</span>
+                    <span className="text-score-md text-purple-600">30%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">⚡ Utilization Rate</span>
+                    <span className="text-score-md text-amber-600">20%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💵 Stability Fees</span>
+                    <span className="text-score-md text-[#49997E]">10%</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3 mb-6">
+                  <div className="flex items-center justify-between bg-gradient-to-r from-blue-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💰 Borrow Volume</span>
+                    <span className="text-score-md text-blue-600">40%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-purple-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">🪙 Vanilla Assets</span>
+                    <span className="text-score-md text-purple-600">25%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-amber-500/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">⚡ Utilization Rate</span>
+                    <span className="text-score-md text-amber-600">20%</span>
+                  </div>
+                  <div className="flex items-center justify-between bg-gradient-to-r from-[#49997E]/5 to-transparent rounded-lg px-4 py-3 border border-gray-200">
+                    <span className="text-body-sm font-medium text-gray-700">💵 Fee Revenue</span>
+                    <span className="text-score-md text-[#49997E]">15%</span>
+                  </div>
+                </div>
+              )}
 
-          </main>
+              <div className="pt-4 border-t border-gray-200">
+                <div className="text-caption text-gray-600 space-y-3">
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-2">
+                      {data.type === 'dex' ? 'Why These Metrics?' : 'Why These Metrics?'}
+                    </p>
+                    <p className="text-[11px] leading-relaxed">
+                      {data.type === 'dex' 
+                        ? 'We prioritize trading volume (actual activity) and capital efficiency (volume/TVL ratio) over raw TVL. A DEX with $100M TVL facilitating $80M daily volume (0.8x efficiency) is more valuable than one with $1B TVL and $50M volume (0.05x efficiency).'
+                        : data.type === 'cdp'
+                        ? 'CDP protocols mint stablecoins against collateral. We prioritize minted debt (demand signal), blue-chip collateral quality (ETH, wBTC = lower risk), utilization (debt ceiling usage), and stability fee revenue (sustainability).'
+                        : 'We moved away from TVL to focus on fundamentals: borrow volume drives revenue, vanilla assets (USDC, USDT, DAI, ETH, wBTC) represent real demand, and utilization rate measures capital efficiency. TVL obscures leverage and can be gamed.'
+                      }
+                    </p>
+                  </div>
+                  
+                  <div>
+                    <p className="font-semibold text-gray-900 mb-1">Calculation Process:</p>
+                    <div className="space-y-1">
+                      <div className="flex items-start gap-2">
+                        <span className="text-[#49997E] font-bold text-[10px]">1.</span>
+                        <span className="text-[10px]">Z-score normalization (90d window)</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-blue-600 font-bold text-[10px]">2.</span>
+                        <span className="text-[10px]">Sigmoid mapping [0,1]</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-amber-600 font-bold text-[10px]">3.</span>
+                        <span className="text-[10px]">Weighted aggregation</span>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <span className="text-gray-600 font-bold text-[10px]">4.</span>
+                        <span className="text-[10px]">Relative peer normalization</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
+
+        {/* Performance Trend - Self-Comparison Analysis */}
+        <section className="mb-6">
+          <h3 className="text-label font-semibold text-gray-500 uppercase tracking-wider mb-3">Performance Trend</h3>
+          <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+            {/* Compact Header */}
+            <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <h4 className="text-body-sm font-bold text-gray-900">Performance vs 90-Day Average</h4>
+                <InfoTooltip 
+                  content="current performance vs protocol's own 90-day baseline. independent of peers—shows if protocol is improving or declining against itself."
+                  position="bottom"
+                  maxWidth="600px"
+                />
+              </div>
+              {data.current.momentum === 'growing' && (
+                <span className="inline-flex items-center px-3 py-1 rounded bg-emerald-100 text-emerald-700 font-bold text-caption uppercase">↑ Growing</span>
+              )}
+              {data.current.momentum === 'stable' && (
+                <span className="inline-flex items-center px-3 py-1 rounded bg-blue-100 text-blue-700 font-bold text-caption uppercase">→ Stable</span>
+              )}
+              {data.current.momentum === 'declining' && (
+                <span className="inline-flex items-center px-3 py-1 rounded bg-rose-100 text-rose-700 font-bold text-caption uppercase">↓ Declining</span>
+              )}
+            </div>
+            
+            {/* Compact Metrics */}
+            {data.historicalMetrics && (
+              <div className="p-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Fees */}
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="text-caption font-semibold text-gray-500 mb-2">FEES (24H)</div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-gray-600">Current</span>
+                        <span className="text-lg font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
+                      </div>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-xs text-gray-600">Avg</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          {formatCurrency(data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)}
+                        </span>
+                      </div>
+                      <div className={`text-xs font-bold pt-1 border-t border-gray-200 ${
+                        data.current.fees > (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
+                      }`}>
+                        {data.current.fees > (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)
+                          ? `↑ +${(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}%`
+                          : `↓ ${(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}%`}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Volume (DEX only) */}
+                  {data.type === 'dex' && (
+                    <div className="border border-gray-200 rounded-lg p-3">
+                      <div className="text-caption font-semibold text-gray-500 mb-2">VOLUME (24H)</div>
+                      <div className="space-y-1">
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-caption text-gray-600">Current</span>
+                          <span className="text-score-md text-gray-900">{formatCurrency(data.current.volume)}</span>
+                        </div>
+                        <div className="flex justify-between items-baseline">
+                          <span className="text-caption text-gray-600">Avg</span>
+                          <span className="text-body-sm font-medium text-gray-700">
+                            {formatCurrency(data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)}
+                          </span>
+                        </div>
+                        <div className={`text-caption font-bold pt-1 border-t border-gray-200 ${
+                          data.current.volume > (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)
+                            ? 'text-emerald-600'
+                            : 'text-rose-600'
+                        }`}>
+                          {data.current.volume > (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)
+                            ? `↑ +${(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}%`
+                            : `↓ ${(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}%`}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* TVL */}
+                  <div className="border border-gray-200 rounded-lg p-3">
+                    <div className="text-caption font-semibold text-gray-500 mb-2">TVL</div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-caption text-gray-600">Current</span>
+                        <span className="text-score-md text-gray-900">{formatCurrency(data.current.tvl)}</span>
+                      </div>
+                      <div className="flex justify-between items-baseline">
+                        <span className="text-caption text-gray-600">Avg</span>
+                        <span className="text-body-sm font-medium text-gray-700">
+                          {formatCurrency(data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)}
+                        </span>
+                      </div>
+                      <div className={`text-caption font-bold pt-1 border-t border-gray-200 ${
+                        data.current.tvl > (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)
+                          ? 'text-emerald-600'
+                          : 'text-rose-600'
+                      }`}>
+                        {data.current.tvl > (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)
+                          ? `↑ +${(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}%`
+                          : `↓ ${(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}%`}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
+        {/* Footer */}
+        <footer className="mt-8 border-t border-gray-200 pt-6">
+          <div className="text-center text-caption text-gray-500">
+            <p className="mb-2">
+              SPT Index v1.0 • Protocol Analysis • Data: DefiLlama API • For Research Purposes Only
+            </p>
+            <p className="text-gray-400 mb-4">
+              Not financial advice • Scores represent operational metrics, not investment recommendations
+            </p>
+          </div>
+          <div className="text-center">
+            <span className="text-body-sm font-bold text-gray-700">powered by exagroup.xyz</span>
+          </div>
+        </footer>
       </div>
     </div>
   );
 }
+
