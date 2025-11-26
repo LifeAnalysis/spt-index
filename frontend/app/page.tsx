@@ -165,9 +165,6 @@ export default function Home() {
     const totalVolume = data.all.reduce((sum, p) => sum + p.volume, 0);
     const avgScore = data.all.reduce((sum, p) => sum + p.score, 0) / data.all.length;
     
-    // Calculate capital efficiency: annualized fee yield
-    const capitalEfficiency = totalTVL > 0 ? (totalFees / totalTVL) * 365 * 100 : 0;
-    
     const scores24h = data.all.filter(p => p.change24h !== null);
     const positiveMovers24h = scores24h.filter(p => p.change24h! > 0).length;
     
@@ -175,16 +172,12 @@ export default function Home() {
     const topByTVL = [...data.all].sort((a, b) => b.tvl - a.tvl).slice(0, 3);
     const topByFees = [...data.all].sort((a, b) => b.fees - a.fees).slice(0, 3);
     const topByVolume = [...data.all].sort((a, b) => b.volume - a.volume).slice(0, 3);
-    const topByEfficiency = [...data.all]
-      .filter(p => p.tvl > 1000000) // Filter out tiny TVL to avoid skewed efficiency
-      .sort((a, b) => (b.fees / b.tvl) - (a.fees / a.tvl))
-      .slice(0, 3);
+    const topByScore = [...data.all].sort((a, b) => b.score - a.score).slice(0, 3);
 
     return {
       totalTVL,
       totalFees,
       totalVolume,
-      capitalEfficiency,
       avgScore,
       protocolCount: data.all.length,
       positiveMovers24h,
@@ -192,7 +185,7 @@ export default function Home() {
       topByTVL,
       topByFees,
       topByVolume,
-      topByEfficiency
+      topByScore
     };
   };
 
@@ -383,15 +376,15 @@ export default function Home() {
 
                 <div className="bg-glass rounded-xl p-4 sm:p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Capital Efficiency</div>
-                    <div className="text-xl sm:text-h2">⚡</div>
+                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Avg Score</div>
+                    <div className="text-xl sm:text-h2">📊</div>
                   </div>
-                  <div className="text-score-lg text-[#49997E]">{metrics.capitalEfficiency.toFixed(2)}%</div>
-                  <div className="text-caption text-gray-500 mt-1">Annualized fee yield</div>
+                  <div className="text-score-lg text-[#49997E]">{metrics.avgScore.toFixed(4)}</div>
+                  <div className="text-caption text-gray-500 mt-1">Index benchmark</div>
                   
                   <div className="mt-auto pt-3 border-t border-gray-100/80">
                     <div className="space-y-1.5">
-                      {metrics.topByEfficiency.map((p, i) => (
+                      {metrics.topByScore.map((p, i) => (
                         <div key={p.slug} className="flex justify-between items-center text-xs">
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400 font-medium w-3">{i + 1}</span>
@@ -402,7 +395,7 @@ export default function Home() {
                             )}
                             <span className="font-medium text-gray-700 truncate max-w-[60px]">{p.protocol}</span>
                           </div>
-                          <span className="text-gray-500">{((p.fees / p.tvl) * 365 * 100).toFixed(1)}%</span>
+                          <span className="text-[#49997E] font-medium">{p.score.toFixed(4)}</span>
                         </div>
                       ))}
                     </div>
