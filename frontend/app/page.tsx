@@ -3,84 +3,9 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import InfoTooltip from './components/InfoTooltip';
-
-interface LendingMetrics {
-  borrowVolume: number;
-  supplyVolume: number;
-  utilization: number;
-  vanillaSupply: number;
-  vanillaUtilization: number;
-  vanillaSupplyRatio: number;
-}
-
-interface DEXMetrics {
-  capitalEfficiency: number;
-  volumeToTVL: number;
-}
-
-interface Protocol {
-  protocol: string;
-  slug: string;
-  logo?: string | null;
-  category: string;
-  type: string;
-  tvl: number;
-  fees: number;
-  volume: number;
-  score: number;
-  rawScore?: number;
-  momentumScore?: number;
-  momentum?: 'growing' | 'stable' | 'declining';
-  historicalDataPoints?: number;
-  change24h: number | null;
-  change7d: number | null;
-  change30d: number | null;
-  lendingMetrics?: LendingMetrics;
-  dexMetrics?: DEXMetrics;
-}
-
-interface SPTData {
-  dex: Protocol[];
-  lending: Protocol[];
-  cdp?: Protocol[];
-  all: Protocol[];
-  _metadata?: {
-    cached: boolean;
-    cacheAge: number;
-    cacheTTL: number;
-  };
-}
-
-// Protocol name to slug mapping
-const PROTOCOL_SLUGS: Record<string, string> = {
-  // DEXs - Ethereum
-  'Uniswap': 'uniswap',
-  'Curve DEX': 'curve-dex',
-  'SushiSwap': 'sushiswap',
-  'Balancer': 'balancer',
-  // DEXs - Multi-chain
-  'PancakeSwap': 'pancakeswap',
-  // DEXs - Solana
-  'Raydium': 'raydium',
-  // DEXs - Other L2s/Chains
-  'QuickSwap': 'quickswap',
-  'Aerodrome': 'aerodrome',
-  // Lending - Ethereum
-  'Aave': 'aave',
-  'Compound V3': 'compound-v3',
-  'Sky Lending': 'makerdao',
-  'MakerDAO': 'makerdao',
-  'Morpho': 'morpho',
-  'Spark': 'spark',
-  // Lending - Other Chains
-  'JustLend': 'justlend',
-  'Venus': 'venus',
-  'Radiant': 'radiant',
-  'BENQI': 'benqi'
-};
-
-type SortColumn = 'protocol' | 'rating' | 'score' | 'change24h' | 'change7d' | 'change30d';
-type SortDirection = 'asc' | 'desc';
+import ProtocolTable from './components/ProtocolTable';
+import { SPTData, Protocol, SortColumn, SortDirection } from './types';
+import { PROTOCOL_SLUGS, formatCurrency, formatScore, getScoreRating } from './utils';
 
 export default function Home() {
   const router = useRouter();
@@ -98,11 +23,11 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/spt';
       // Add cache-busting timestamp to bypass HTTP caching
       const cacheBuster = `?t=${Date.now()}`;
-      console.log('📡 Fetching from:', RAILWAY_API + cacheBuster);
-      const res = await fetch(RAILWAY_API + cacheBuster, {
+      console.log('📡 Fetching from:', API_URL + cacheBuster);
+      const res = await fetch(API_URL + cacheBuster, {
         cache: 'no-store', // Disable Next.js caching
         headers: {
           'Cache-Control': 'no-cache' // Request fresh data from server
@@ -204,27 +129,6 @@ export default function Home() {
     });
   }, [data]);
 
-  const formatCurrency = (value: number) => {
-    if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-    if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-    if (value >= 1e3) return `$${(value / 1e3).toFixed(2)}K`;
-    return `$${value.toFixed(2)}`;
-  };
-
-  const formatScore = (score: number) => {
-    return score.toFixed(4);
-  };
-
-  const getScoreRating = (score: number): { label: string; color: string } => {
-    // Updated thresholds for cross-protocol Z-score range (typically 0.35-0.75)
-    if (score >= 0.65) return { label: 'AAA', color: 'text-[#49997E] bg-[#49997E]/10' };
-    if (score >= 0.55) return { label: 'AA', color: 'text-emerald-600 bg-emerald-50' };
-    if (score >= 0.48) return { label: 'A', color: 'text-blue-600 bg-blue-50' };
-    if (score >= 0.42) return { label: 'BBB', color: 'text-amber-600 bg-amber-50' };
-    if (score >= 0.35) return { label: 'BB', color: 'text-orange-600 bg-orange-50' };
-    return { label: 'B', color: 'text-gray-600 bg-gray-100' };
-  };
-
   const formatChange = (change: number | null | undefined) => {
     if (change === null || change === undefined || isNaN(change)) {
       return (
@@ -250,59 +154,6 @@ export default function Home() {
       setSortColumn(column);
       setSortDirection(column === 'protocol' ? 'asc' : 'desc');
     }
-  };
-
-  const sortProtocols = (protocols: Protocol[]) => {
-    const sorted = [...protocols];
-    
-    sorted.sort((a, b) => {
-      let aValue: number | string | null;
-      let bValue: number | string | null;
-      
-      switch (sortColumn) {
-        case 'protocol':
-          aValue = a.protocol.toLowerCase();
-          bValue = b.protocol.toLowerCase();
-          break;
-        case 'rating':
-          aValue = a.score;
-          bValue = b.score;
-          break;
-        case 'score':
-          aValue = a.score;
-          bValue = b.score;
-          break;
-        case 'change24h':
-          aValue = a.change24h ?? -Infinity;
-          bValue = b.change24h ?? -Infinity;
-          break;
-        case 'change7d':
-          aValue = a.change7d ?? -Infinity;
-          bValue = b.change7d ?? -Infinity;
-          break;
-        case 'change30d':
-          aValue = a.change30d ?? -Infinity;
-          bValue = b.change30d ?? -Infinity;
-          break;
-        default:
-          return 0;
-      }
-      
-      if (aValue === null || aValue === -Infinity) return 1;
-      if (bValue === null || bValue === -Infinity) return -1;
-      
-      if (typeof aValue === 'string' && typeof bValue === 'string') {
-        return sortDirection === 'asc' 
-          ? aValue.localeCompare(bValue)
-          : bValue.localeCompare(aValue);
-      }
-      
-      return sortDirection === 'asc' 
-        ? (aValue as number) - (bValue as number)
-        : (bValue as number) - (aValue as number);
-    });
-    
-    return sorted;
   };
 
   const getAggregateMetrics = () => {
@@ -331,269 +182,9 @@ export default function Home() {
     };
   };
 
-  // Mobile Card Component
-  const MobileProtocolCard = ({ protocol, index }: { protocol: Protocol; index: number }) => {
-    const rating = getScoreRating(protocol.score);
-    
-    return (
-      <div
-        onClick={() => {
-          const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
-          if (slug) router.push(`/protocol/${slug}`);
-        }}
-        className="bg-white rounded-lg p-3 active:scale-[0.98] transition-transform cursor-pointer border border-gray-200 shadow-sm hover:shadow-md"
-      >
-        <div className="flex items-center gap-3">
-          {/* Rank */}
-          <div className="text-gray-400 font-medium text-sm w-6 flex-shrink-0">
-            {index + 1}
-          </div>
-          
-          {/* Logo & Name */}
-          <div className="flex items-center gap-2.5 flex-1 min-w-0">
-            {protocol.logo && (
-              <img 
-                src={protocol.logo} 
-                alt={`${protocol.protocol} logo`}
-                className="w-9 h-9 rounded-full flex-shrink-0"
-                onError={(e) => {
-                  e.currentTarget.style.display = 'none';
-                }}
-              />
-            )}
-            <div className="min-w-0 flex-1">
-              <div className="text-gray-900 font-semibold text-base truncate">{protocol.protocol}</div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <span className={`inline-flex px-1.5 py-0.5 rounded text-[10px] font-bold ${rating.color}`}>
-                  {rating.label}
-                </span>
-                {protocol.momentum && (
-                  <span className="text-sm" title={`Momentum: ${protocol.momentum}`}>
-                    {protocol.momentum === 'growing' && '📈'}
-                    {protocol.momentum === 'declining' && '📉'}
-                    {protocol.momentum === 'stable' && '➡️'}
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Changes */}
-          <div className="flex flex-col gap-1 items-end flex-shrink-0">
-            <div className={`text-xs font-semibold tabular-nums ${protocol.change24h !== null && protocol.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {formatChange(protocol.change24h)}
-            </div>
-            <div className={`text-xs font-medium tabular-nums ${protocol.change7d !== null && protocol.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-              {formatChange(protocol.change7d)}
-            </div>
-            <div className="text-[10px] text-gray-500">24h/7d</div>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Mobile Card Component - REMOVED (Moved to components/MobileProtocolCard.tsx)
 
-  // Desktop Table Component (existing)
-  const renderProtocolTable = (protocols: Protocol[], title: string, description: string, icon: string) => {
-    if (protocols.length === 0) return null;
-
-    const sortedProtocols = sortProtocols(protocols);
-
-    const SortIcon = ({ column }: { column: SortColumn }) => {
-      if (sortColumn !== column) {
-        return <span className="text-gray-300 ml-1">⇅</span>;
-      }
-      return sortDirection === 'asc' ? 
-        <span className="text-[#49997E] ml-1">↑</span> : 
-        <span className="text-[#49997E] ml-1">↓</span>;
-    };
-
-    return (
-      <div className="mb-8">
-        <div className="mb-4 hidden md:block">
-          <div className="flex items-center gap-3 mb-2">
-            <span className="text-h1">{icon}</span>
-            <h2 className="text-h2 text-gray-900">{title}</h2>
-          </div>
-          <p className="text-body-sm text-gray-600">{description}</p>
-        </div>
-        
-        {/* Mobile Title */}
-        <div className="md:hidden mb-3">
-          <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-            <span className="text-xl">{icon}</span>
-            {title}
-          </h2>
-        </div>
-
-        {/* Mobile Cards (< 768px) */}
-        <div className="md:hidden space-y-2">
-          {sortedProtocols.map((protocol, index) => (
-            <MobileProtocolCard key={protocol.protocol} protocol={protocol} index={index} />
-          ))}
-        </div>
-
-        {/* Desktop Table (>= 768px) */}
-        <div className="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
-              <thead>
-                <tr className="bg-gradient-to-r from-[#49997E]/10 to-[#49997E]/5 border-b-2 border-gray-200">
-                  <th className="w-[30%] px-6 py-4 align-middle">
-                    <button
-                      onClick={() => handleSort('protocol')}
-                      className="flex items-center justify-start w-full text-caption font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                    >
-                      Protocol
-                      <SortIcon column="protocol" />
-                    </button>
-                  </th>
-                  <th className="w-[12%] px-6 py-4 align-middle">
-                    <div className="flex items-center justify-center w-full">
-                      <button
-                        onClick={() => handleSort('rating')}
-                        className="flex items-center text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                      >
-                        Rating
-                        <SortIcon column="rating" />
-                      </button>
-                      <InfoTooltip 
-                        content="credit-style rating: aaa (best) to b (lowest) based on spt score. higher rating = more efficient protocol operations."
-                        position="bottom"
-                        maxWidth="550px"
-                      />
-                    </div>
-                  </th>
-                  <th className="w-[14%] px-6 py-4 align-middle">
-                    <div className="flex items-center justify-center w-full">
-                      <button
-                        onClick={() => handleSort('score')}
-                        className="flex items-center text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                      >
-                        SPT Score
-                        <SortIcon column="score" />
-                      </button>
-                      <InfoTooltip 
-                        content="compares protocols against category peers (dex vs dex, lending vs lending) using z-score normalization. range: 0.20-0.60. higher = better."
-                        position="bottom"
-                        maxWidth="600px"
-                      />
-                    </div>
-                  </th>
-                  <th className="w-[10%] px-6 py-4 align-middle">
-                    <div className="flex items-center justify-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      <span>Trend</span>
-                      <InfoTooltip 
-                        content="protocol's current performance vs its own 90-day average. 📈 growing = above baseline, ➡️ stable = at baseline, 📉 declining = below baseline."
-                        position="bottom"
-                        maxWidth="600px"
-                      />
-                    </div>
-                  </th>
-                  <th className="w-[12%] px-6 py-4 align-middle">
-                    <button
-                      onClick={() => handleSort('change24h')}
-                      className="flex items-center justify-center w-full text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                    >
-                      Δ 24h
-                      <SortIcon column="change24h" />
-                    </button>
-                  </th>
-                  <th className="w-[14.33%] px-6 py-4 align-middle">
-                    <button
-                      onClick={() => handleSort('change7d')}
-                      className="flex items-center justify-center w-full text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                    >
-                      Δ 7d
-                      <SortIcon column="change7d" />
-                    </button>
-                  </th>
-                  <th className="w-[14.34%] px-6 py-4 align-middle">
-                    <button
-                      onClick={() => handleSort('change30d')}
-                      className="flex items-center justify-center w-full text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                    >
-                      Δ 30d
-                      <SortIcon column="change30d" />
-                    </button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100 bg-white">
-                {sortedProtocols.map((protocol, index) => {
-                  const rating = getScoreRating(protocol.score);
-                  return (
-                    <tr
-                      key={protocol.protocol}
-                      className="hover:bg-gradient-to-r hover:from-[#49997E]/5 hover:to-transparent transition-all duration-200 group"
-                    >
-                      <td className="px-6 py-5 align-middle">
-                        <button
-                          onClick={() => {
-                            const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
-                            if (slug) router.push(`/protocol/${slug}`);
-                          }}
-                          className="w-full text-left group-hover:translate-x-1 transition-transform duration-200"
-                        >
-                          <div className="flex items-center gap-3">
-                            {protocol.logo && (
-                              <img 
-                                src={protocol.logo} 
-                                alt={`${protocol.protocol} logo`}
-                                className="w-8 h-8 rounded-full"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = 'none';
-                                }}
-                              />
-                            )}
-                            <div className="flex items-center gap-2.5">
-                              <span className="text-body-lg font-semibold text-gray-900 group-hover:text-[#49997E] transition-colors">
-                                {protocol.protocol}
-                              </span>
-                              <span className="text-gray-300 group-hover:text-[#49997E] transition-colors text-body-sm">→</span>
-                            </div>
-                          </div>
-                        </button>
-                      </td>
-                      <td className="px-6 py-5 align-middle">
-                        <div className="flex justify-center">
-                          <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs font-bold ${rating.color} min-w-[50px]`}>
-                            {rating.label}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 align-middle">
-                        <div className="flex justify-center">
-                          <span className="text-lg font-bold text-[#49997E] tabular-nums">{formatScore(protocol.score)}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 align-middle">
-                        <div className="flex justify-center items-center gap-1.5" title={`Momentum Score: ${protocol.momentumScore?.toFixed(4) || 'N/A'}`}>
-                          {protocol.momentum === 'growing' && <span className="text-2xl">📈</span>}
-                          {protocol.momentum === 'declining' && <span className="text-2xl">📉</span>}
-                          {protocol.momentum === 'stable' && <span className="text-2xl">➡️</span>}
-                          {!protocol.momentum && <span className="text-gray-400">—</span>}
-                        </div>
-                      </td>
-                      <td className="px-6 py-5 align-middle">
-                        <div className="flex justify-center text-sm font-semibold tabular-nums">{formatChange(protocol.change24h)}</div>
-                      </td>
-                      <td className="px-6 py-5 align-middle">
-                        <div className="flex justify-center text-sm font-semibold tabular-nums">{formatChange(protocol.change7d)}</div>
-                      </td>
-                      <td className="px-6 py-5 align-middle">
-                        <div className="flex justify-center text-sm font-semibold tabular-nums">{formatChange(protocol.change30d)}</div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    );
-  };
+  // Desktop Table Component - REMOVED (Moved to components/ProtocolTable.tsx)
 
   const metrics = getAggregateMetrics();
   
@@ -726,7 +317,7 @@ export default function Home() {
             <div>
               <h3 className="text-body font-bold text-blue-900 mb-1.5">How SPT Works</h3>
               <p className="text-body-sm text-gray-700 mb-2">
-                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>—DEXs compete with DEXs, lending platforms with lending platforms. 
+                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>. DEXs compete with DEXs, lending platforms with lending platforms. 
                 Metrics are standardized over a 90-day window using z-scores, enabling fair comparison across sizes and conditions.
               </p>
             </div>
@@ -794,7 +385,7 @@ export default function Home() {
 
         {/* Executive Summary - KPI Cards */}
         {!error && data && metrics && (
-          <>
+          <div className="animate-fade-in">
             <section className="mb-8">
               <h3 className="text-label font-semibold text-gray-500 uppercase tracking-wider mb-3">Market Overview</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-2">
@@ -845,28 +436,39 @@ export default function Home() {
             <section>
               <h3 className="text-label font-semibold text-gray-500 uppercase tracking-wider mb-4">Protocol Rankings</h3>
               
-              {renderProtocolTable(
-                data.dex,
-                'DEX Protocols',
-                'Ranked by capital efficiency: volume turnover (40%), capital efficiency ratio (30%), fee generation (20%), growth momentum (10%)',
-                '🔄'
-              )}
+              <ProtocolTable
+                protocols={data.dex}
+                title="DEX Protocols"
+                description="Ranked by capital efficiency: volume turnover (40%), capital efficiency ratio (30%), fee generation (20%), growth momentum (10%)"
+                icon="🔄"
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
               
-              {renderProtocolTable(
-                data.lending,
-                'Lending Protocols',
-                'Ranked by utilization: borrow demand (40%), vanilla asset supply (25%), utilization rate (20%), fee revenue (15%)',
-                '💰'
-              )}
+              <ProtocolTable
+                protocols={data.lending}
+                title="Lending Protocols"
+                description="Ranked by utilization: borrow demand (40%), vanilla asset supply (25%), utilization rate (20%), fee revenue (15%)"
+                icon="💰"
+                sortColumn={sortColumn}
+                sortDirection={sortDirection}
+                onSort={handleSort}
+              />
               
-              {data.cdp && data.cdp.length > 0 && renderProtocolTable(
-                data.cdp,
-                'CDP Protocols (Stablecoins)',
-                'Ranked by stablecoin adoption: minted supply (40%), blue-chip collateral (30%), utilization (20%), fees (10%)',
-                '🏦'
+              {data.cdp && data.cdp.length > 0 && (
+                <ProtocolTable
+                  protocols={data.cdp}
+                  title="CDP Protocols (Stablecoins)"
+                  description="Ranked by stablecoin adoption: minted supply (40%), blue-chip collateral (30%), utilization (20%), fees (10%)"
+                  icon="🏦"
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
               )}
             </section>
-          </>
+          </div>
         )}
 
         {/* Empty State */}
@@ -902,7 +504,7 @@ export default function Home() {
                     />
                   </div>
                   <p className="text-xs text-gray-600 mb-3">
-                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias—a small, efficient protocol can outrank a large, inefficient one.
+                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias so a small, efficient protocol can outrank a large, inefficient one.
                   </p>
                   <div className="bg-gray-50 rounded p-2 text-xs text-gray-700">
                     <div className="font-mono mb-1">z = (x - μ) / σ</div>
