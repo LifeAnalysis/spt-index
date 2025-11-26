@@ -76,212 +76,206 @@ export default function ProtocolTable({
 
   const SortIcon = ({ column }: { column: SortColumn }) => {
     if (sortColumn !== column) {
-      return <span className="text-gray-300 ml-1">⇅</span>;
+      return <span className="text-gray-300 ml-1 text-[10px]">⇅</span>;
     }
     return sortDirection === 'asc' ? 
-      <span className="text-[#49997E] ml-1">↑</span> : 
-      <span className="text-[#49997E] ml-1">↓</span>;
+      <span className="text-[#49997E] ml-1 text-[10px]">▲</span> : 
+      <span className="text-[#49997E] ml-1 text-[10px]">▼</span>;
+  };
+
+  // Helper for Change Badges
+  const ChangeBadge = ({ value }: { value: number | null | undefined }) => {
+    if (value === null || value === undefined || isNaN(value)) {
+      return <span className="text-gray-300 font-medium text-xs">—</span>;
+    }
+    const isPositive = value >= 0;
+    const bgClass = isPositive ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100';
+    
+    return (
+      <div className={`inline-flex items-center justify-center px-2.5 py-1 rounded-lg text-xs font-bold border ${bgClass} min-w-[70px]`}>
+        {value > 0 ? '+' : ''}{value.toFixed(2)}%
+      </div>
+    );
   };
 
   return (
-    <div className="mb-8">
-      <div className="mb-4 hidden md:block">
+    <div className="mb-8 animate-fade-in">
+      <div className="mb-5 hidden md:block">
         <div className="flex items-center gap-3 mb-2">
-          <span className="text-h1">{icon}</span>
-          <h2 className="text-h2 text-gray-900">{title}</h2>
+          <span className="text-3xl p-2 bg-white rounded-xl shadow-sm border border-gray-100">{icon}</span>
+          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">{title}</h2>
         </div>
-        <p className="text-body-sm text-gray-600">{description}</p>
+        <p className="text-sm text-gray-500 max-w-2xl ml-14 leading-relaxed">{description}</p>
       </div>
       
       {/* Mobile Title */}
       <div className="md:hidden mb-3">
-        <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+        <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
           <span className="text-xl">{icon}</span>
           {title}
         </h2>
       </div>
 
       {/* Mobile Cards (< 768px) */}
-      <div className="md:hidden space-y-2">
+      <div className="md:hidden space-y-3">
         {sortedProtocols.map((protocol, index) => (
           <MobileProtocolCard key={protocol.protocol} protocol={protocol} index={index} />
         ))}
       </div>
 
       {/* Desktop Table (>= 768px) */}
-      <div className="hidden md:block bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-lg shadow-gray-100/50 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed">
             <thead>
-              <tr className="bg-gradient-to-r from-[#49997E]/10 to-[#49997E]/5 border-b-2 border-gray-200">
-                <th className="w-[30%] px-6 py-4 align-middle">
+              <tr className="bg-gray-50/50 border-b border-gray-200">
+                <th className="w-[28%] px-6 py-4">
                   <button
                     onClick={() => onSort('protocol')}
-                    className="flex items-center justify-start w-full text-caption font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
+                    className="flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-[#49997E] transition-colors"
                   >
                     Protocol
                     <SortIcon column="protocol" />
                   </button>
                 </th>
-                <th className="w-[12%] px-6 py-4 align-middle">
-                  <div className="flex items-center justify-center w-full">
+                <th className="w-[12%] px-4 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => onSort('rating')}
-                      className="flex items-center text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
+                      className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-[#49997E] transition-colors"
                     >
                       Rating
                       <SortIcon column="rating" />
                     </button>
-                    <InfoTooltip 
-                      content="credit-style rating: aaa (best) to b (lowest) based on spt score. higher rating = more efficient protocol operations."
-                      position="bottom"
-                      maxWidth="550px"
-                    />
+                    <InfoTooltip content="Credit-style rating (AAA to B) based on efficiency." position="top" />
                   </div>
                 </th>
-                <th className="w-[14%] px-6 py-4 align-middle">
-                  <div className="flex items-center justify-center w-full">
+                <th className="w-[15%] px-4 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1">
                     <button
                       onClick={() => onSort('score')}
-                      className="flex items-center text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
+                      className="flex items-center text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-[#49997E] transition-colors"
                     >
-                      SPT Score
+                      Score
                       <SortIcon column="score" />
                     </button>
-                    <InfoTooltip 
-                      content="compares protocols against category peers (dex vs dex, lending vs lending) using z-score normalization. range: 0.20-0.60. higher = better."
-                      position="bottom"
-                      maxWidth="600px"
-                    />
+                    <InfoTooltip content="0-1 normalized efficiency score." position="top" />
                   </div>
                 </th>
-                <th className="w-[10%] px-6 py-4 align-middle">
-                  <div className="flex items-center justify-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                    <span>Trend</span>
-                    <InfoTooltip 
-                      content="protocol's current performance vs its own 90-day average. 📈 growing = above baseline, ➡️ stable = at baseline, 📉 declining = below baseline."
-                      position="bottom"
-                      maxWidth="600px"
-                    />
+                <th className="w-[12%] px-4 py-4 text-center">
+                  <div className="flex items-center justify-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                    Trend
+                    <InfoTooltip content="Momentum vs 90d average." position="top" />
                   </div>
                 </th>
-                <th className="w-[12%] px-6 py-4 align-middle">
-                  <button
-                    onClick={() => onSort('change24h')}
-                    className="flex items-center justify-center w-full text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                  >
-                    Δ 24h
-                    <SortIcon column="change24h" />
+                <th className="w-[11%] px-4 py-4 text-right">
+                  <button onClick={() => onSort('change24h')} className="inline-flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-[#49997E]">
+                    24h <SortIcon column="change24h" />
                   </button>
                 </th>
-                <th className="w-[14.33%] px-6 py-4 align-middle">
-                  <button
-                    onClick={() => onSort('change7d')}
-                    className="flex items-center justify-center w-full text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                  >
-                    Δ 7d
-                    <SortIcon column="change7d" />
+                <th className="w-[11%] px-4 py-4 text-right">
+                  <button onClick={() => onSort('change7d')} className="inline-flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-[#49997E]">
+                    7d <SortIcon column="change7d" />
                   </button>
                 </th>
-                <th className="w-[14.34%] px-6 py-4 align-middle">
-                  <button
-                    onClick={() => onSort('change30d')}
-                    className="flex items-center justify-center w-full text-xs font-semibold text-gray-700 uppercase tracking-wider hover:text-[#49997E] transition-colors"
-                  >
-                    Δ 30d
-                    <SortIcon column="change30d" />
+                <th className="w-[11%] px-4 py-4 text-right">
+                  <button onClick={() => onSort('change30d')} className="inline-flex items-center gap-1 text-xs font-bold text-gray-500 uppercase tracking-wider hover:text-[#49997E]">
+                    30d <SortIcon column="change30d" />
                   </button>
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 bg-white">
-              {sortedProtocols.map((protocol, index) => {
+            <tbody className="divide-y divide-gray-50">
+              {sortedProtocols.map((protocol) => {
                 const rating = getScoreRating(protocol.score);
                 return (
                   <tr
                     key={protocol.protocol}
-                    className="hover:bg-gradient-to-r hover:from-[#49997E]/5 hover:to-transparent transition-all duration-200 group"
+                    className="group hover:bg-blue-50/30 transition-colors duration-200"
                   >
-                    <td className="px-6 py-5 align-middle">
+                    {/* Protocol Name & Logo */}
+                    <td className="px-6 py-4">
                       <button
                         onClick={() => {
                           const slug = protocol.slug || PROTOCOL_SLUGS[protocol.protocol];
                           if (slug) router.push(`/protocol/${slug}`);
                         }}
-                        className="w-full text-left group-hover:translate-x-1 transition-transform duration-200"
+                        className="flex items-center gap-4 w-full text-left group-hover:translate-x-1 transition-transform duration-200"
                       >
-                        <div className="flex items-center gap-3">
-                          {protocol.logo && (
+                        <div className="relative w-10 h-10 rounded-xl bg-white shadow-sm border border-gray-100 flex items-center justify-center overflow-hidden flex-shrink-0">
+                          {protocol.logo ? (
                             <img 
                               src={protocol.logo} 
-                              alt={`${protocol.protocol} logo`}
-                              className="w-8 h-8 rounded-full"
-                              onError={(e) => {
-                                e.currentTarget.style.display = 'none';
-                              }}
+                              alt={protocol.protocol}
+                              className="w-8 h-8 object-contain"
+                              onError={(e) => { e.currentTarget.style.display = 'none'; }}
                             />
+                          ) : (
+                            <span className="text-lg">{icon}</span>
                           )}
-                          <div className="flex items-center gap-2.5">
-                            <span className="text-body-lg font-semibold text-gray-900 group-hover:text-[#49997E] transition-colors">
-                              {protocol.protocol}
-                            </span>
-                            <span className="text-gray-300 group-hover:text-[#49997E] transition-colors text-body-sm">→</span>
-                          </div>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-bold text-gray-900 group-hover:text-[#49997E] transition-colors">
+                            {protocol.protocol}
+                          </span>
+                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                            {protocol.type}
+                          </span>
                         </div>
                       </button>
                     </td>
-                    <td className="px-6 py-5 align-middle">
-                      <div className="flex justify-center">
-                        <span className={`inline-flex items-center justify-center px-3 py-1.5 rounded-md text-xs font-bold ${rating.color} min-w-[50px]`}>
-                          {rating.label}
+
+                    {/* Rating */}
+                    <td className="px-4 py-4 text-center">
+                      <span className={`inline-flex items-center justify-center w-12 h-7 rounded-lg text-xs font-bold border ${rating.color} shadow-sm`}>
+                        {rating.label}
+                      </span>
+                    </td>
+
+                    {/* Score with Bar */}
+                    <td className="px-4 py-4">
+                      <div className="flex flex-col items-center gap-1">
+                        <span className="text-sm font-bold text-gray-900 tabular-nums">
+                          {formatScore(protocol.score)}
                         </span>
+                        <div className="w-16 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-[#49997E] rounded-full"
+                            style={{ width: `${Math.min(protocol.score * 100, 100)}%` }}
+                          />
+                        </div>
                       </div>
                     </td>
-                    <td className="px-6 py-5 align-middle">
-                      <div className="flex justify-center">
-                        <span className="text-lg font-bold text-[#49997E] tabular-nums">{formatScore(protocol.score)}</span>
-                      </div>
+
+                    {/* Trend Pill */}
+                    <td className="px-4 py-4 text-center">
+                      {protocol.momentum === 'growing' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 text-[10px] font-bold uppercase tracking-wide border border-emerald-200">
+                          Growing
+                        </span>
+                      )}
+                      {protocol.momentum === 'declining' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-rose-100 text-rose-700 text-[10px] font-bold uppercase tracking-wide border border-rose-200">
+                          Declining
+                        </span>
+                      )}
+                      {protocol.momentum === 'stable' && (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-100 text-blue-700 text-[10px] font-bold uppercase tracking-wide border border-blue-200">
+                          Stable
+                        </span>
+                      )}
+                      {!protocol.momentum && <span className="text-gray-300">—</span>}
                     </td>
-                    <td className="px-6 py-5 align-middle">
-                      <div className="flex justify-center items-center gap-1.5" title={`Momentum Score: ${protocol.momentumScore?.toFixed(4) || 'N/A'}`}>
-                        {protocol.momentum === 'growing' && <span className="text-2xl">📈</span>}
-                        {protocol.momentum === 'declining' && <span className="text-2xl">📉</span>}
-                        {protocol.momentum === 'stable' && <span className="text-2xl">➡️</span>}
-                        {!protocol.momentum && <span className="text-gray-400">—</span>}
-                      </div>
+
+                    {/* Changes */}
+                    <td className="px-4 py-4 text-right">
+                      <ChangeBadge value={protocol.change24h} />
                     </td>
-                    <td className="px-6 py-5 align-middle">
-                      <div className="flex justify-center text-sm font-semibold tabular-nums">
-                        {(() => {
-                          const change = formatChange(protocol.change24h);
-                          if (change.type === 'new') {
-                            return <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">NEW</span>;
-                          }
-                          return <span className={change.color}>{change.arrow} {change.value}%</span>;
-                        })()}
-                      </div>
+                    <td className="px-4 py-4 text-right">
+                      <ChangeBadge value={protocol.change7d} />
                     </td>
-                    <td className="px-6 py-5 align-middle">
-                      <div className="flex justify-center text-sm font-semibold tabular-nums">
-                        {(() => {
-                          const change = formatChange(protocol.change7d);
-                          if (change.type === 'new') {
-                            return <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">NEW</span>;
-                          }
-                          return <span className={change.color}>{change.arrow} {change.value}%</span>;
-                        })()}
-                      </div>
-                    </td>
-                    <td className="px-6 py-5 align-middle">
-                      <div className="flex justify-center text-sm font-semibold tabular-nums">
-                        {(() => {
-                          const change = formatChange(protocol.change30d);
-                          if (change.type === 'new') {
-                            return <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-medium rounded-full">NEW</span>;
-                          }
-                          return <span className={change.color}>{change.arrow} {change.value}%</span>;
-                        })()}
-                      </div>
+                    <td className="px-4 py-4 text-right">
+                      <ChangeBadge value={protocol.change30d} />
                     </td>
                   </tr>
                 );
@@ -293,4 +287,3 @@ export default function ProtocolTable({
     </div>
   );
 }
-
