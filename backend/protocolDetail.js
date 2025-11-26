@@ -367,6 +367,14 @@ export async function getProtocolDetail(protocolSlug) {
           feeGrowth: feeGrowth
         };
       }
+    } else if (protocolType === 'liquid-staking') {
+      // Liquid staking metrics - TVL is staked assets, fees are protocol revenue
+      currentMetrics = {
+        tvl: currentTvl,
+        fees: feesData.total24h || 0,
+        feeGrowth: feeGrowth,
+        volume: 0 // Not applicable for liquid staking
+      };
     } else {
       // DEX metrics - calculate capital efficiency
       const volumeAmount = volumeData.total24h || 0;
