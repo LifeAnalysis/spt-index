@@ -195,26 +195,14 @@ export default function ProtocolDetailPage() {
           <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
             {/* Identity Card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="flex items-center justify-between mb-6">
+              <div className="mb-6">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
                   data.type === 'lending' ? 'bg-green-50 text-green-700' : 'bg-purple-50 text-purple-700'
                 }`}>
                   {data.type === 'dex' ? 'DEX' : data.type === 'lending' ? 'Lending' : 'CDP'}
                 </span>
-                <div className="flex gap-3">
-                  {data.website && (
-                    <a href={data.website} target="_blank" rel="noopener" className="text-gray-400 hover:text-[#49997E] transition-colors">
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" /></svg>
-                    </a>
-                  )}
-                  {data.twitter && (
-                    <a href={data.twitter} target="_blank" rel="noopener" className="text-gray-400 hover:text-[#49997E] transition-colors">
-                      <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
-                    </a>
-                )}
               </div>
-            </div>
 
               <div className="flex items-center gap-4 mb-4">
                 {data.logo && (
@@ -271,17 +259,23 @@ export default function ProtocolDetailPage() {
                       {data.current.momentum === 'stable' && '➡️'}
                     </span>
                     <div>
-                      <div className="text-xs text-gray-400 uppercase tracking-wider font-medium">Recent Momentum</div>
-                      <div className={`text-sm font-bold capitalize ${
+                      <div className="text-xs text-gray-400 uppercase tracking-wider font-medium">30-Day Trend</div>
+                      <div className={`text-sm font-bold ${
                         data.current.momentum === 'growing' ? 'text-emerald-600' :
                         data.current.momentum === 'declining' ? 'text-rose-600' : 'text-blue-600'
                       }`}>
-                        {data.current.momentum}
-                        {data.current.change30d && ` (${data.current.change30d >= 0 ? '+' : ''}${data.current.change30d.toFixed(1)}% avg 30d)`}
+                        {data.current.momentum === 'growing' && 'Gaining Momentum'}
+                        {data.current.momentum === 'declining' && 'Losing Steam'}
+                        {data.current.momentum === 'stable' && 'Holding Steady'}
+                        {data.current.change30d && (
+                          <span className="text-xs ml-1 font-normal">
+                            ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d ago)
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-                </div>
-              </div>
               )}
               
               {/* Quick Stats List */}
