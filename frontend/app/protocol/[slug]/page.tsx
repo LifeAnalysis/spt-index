@@ -374,6 +374,19 @@ export default function ProtocolDetailPage() {
                   </>
                 )}
 
+        {data.type === 'liquid-staking' && (
+                  <>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-500">Staked Assets</span>
+                      <span className="text-base font-bold text-gray-900">{formatCurrency(data.current.tvl)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm font-medium text-gray-500">Daily Revenue</span>
+                      <span className="text-base font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
+                    </div>
+                  </>
+                )}
+
         {(data.type === 'lending' || data.type === 'cdp') && data.current.lendingMetrics && (
                   <>
                     <div className="flex justify-between items-center">
@@ -680,7 +693,7 @@ export default function ProtocolDetailPage() {
               {/* Detailed Metrics Panel */}
               <div className="bg-white rounded-3xl border border-gray-200 shadow-sm p-6 sm:p-8">
                 <h3 className="text-lg font-bold text-gray-900 mb-6">
-                  {data.type === 'dex' ? 'Efficiency Metrics' : 'Capital Utilization'}
+                  {data.type === 'dex' ? 'Efficiency Metrics' : data.type === 'liquid-staking' ? 'Staking Metrics' : 'Capital Utilization'}
                 </h3>
                 
                 <div className="space-y-6">
@@ -704,6 +717,28 @@ export default function ProtocolDetailPage() {
                           <span className="text-sm text-gray-600">Daily Revenue</span>
                           <span className="text-sm font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
                       </div>
+                      </div>
+                    </>
+                  ) : data.type === 'liquid-staking' ? (
+                    <>
+                      <div>
+                        <div className="flex justify-between mb-2">
+                          <span className="text-sm text-gray-600">Total Value Staked</span>
+                          <span className="text-sm font-bold text-gray-900">{formatCurrency(data.current.tvl)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Total assets staked through this protocol.
+                        </p>
+                      </div>
+                      
+                      <div className="pt-4 border-t border-gray-100">
+                        <div className="flex justify-between mb-1">
+                          <span className="text-sm text-gray-600">Daily Revenue</span>
+                          <span className="text-sm font-bold text-gray-900">{formatCurrency(data.current.fees)}</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Protocol fees generated from staking operations.
+                        </p>
                       </div>
                     </>
                   ) : data.current.lendingMetrics ? (
@@ -764,6 +799,11 @@ export default function ProtocolDetailPage() {
                       {data.current.dexMetrics.capitalEfficiency > 0.5 
                         ? " This is exceptionally high, indicating highly efficient liquidity usage." 
                         : " There may be room to improve liquidity utilization compared to top-tier peers."}
+                    </>
+                  ) : data.type === 'liquid-staking' ? (
+                    <>
+                      This protocol has <strong>{formatCurrency(data.current.tvl)}</strong> in staked assets, generating <strong>{formatCurrency(data.current.fees)}</strong> in daily revenue. 
+                      Liquid staking allows users to earn staking rewards while maintaining liquidity through derivative tokens.
                     </>
                   ) : data.current.lendingMetrics ? (
                     <>
