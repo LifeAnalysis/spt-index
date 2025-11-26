@@ -28,7 +28,7 @@ export default function ProtocolDetailPage() {
       setLoading(true);
       setError(null);
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const RAILWAY_API = 'https://spt-index-production.up.railway.app';
       
       // Fetch both endpoints in parallel
       // 1. Protocol detail for historical data and metrics
@@ -39,8 +39,8 @@ export default function ProtocolDetailPage() {
       }
       
       const [detailRes, indexRes] = await Promise.all([
-        fetch(`${API_URL}/api/protocol/${slug}`, { headers }),
-        fetch(`${API_URL}/api/spt`)
+        fetch(`${RAILWAY_API}/api/protocol/${slug}`, { headers }),
+        fetch(`${RAILWAY_API}/api/spt`)
       ]);
       
       // If 304 Not Modified, data hasn't changed
