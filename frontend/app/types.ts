@@ -5,7 +5,6 @@ export interface LendingMetrics {
   vanillaSupply: number;
   vanillaUtilization: number;
   vanillaSupplyRatio: number;
-  bluechipCollateralRatio: number;
   pools?: Array<{
     symbol: string;
     chain: string;
@@ -46,7 +45,6 @@ export interface SPTData {
   dex: Protocol[];
   lending: Protocol[];
   cdp?: Protocol[];
-  'liquid-staking'?: Protocol[];
   all: Protocol[];
   _metadata?: {
     cached: boolean;

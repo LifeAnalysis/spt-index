@@ -10,7 +10,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "SPT Index Dashboard",
-  description: "DeFi Fundamentals Live: Performance Scores Based on On-Chain Metrics",
+  description: "DeFi Fundamentals Live — Performance Scores Based on On-Chain Metrics",
 };
 
 // Force dynamic rendering for entire app

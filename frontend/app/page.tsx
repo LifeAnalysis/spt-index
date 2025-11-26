@@ -23,7 +23,7 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spt-index-production.up.railway.app/api/spt';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/spt';
       // Add cache-busting timestamp to bypass HTTP caching
       const cacheBuster = `?t=${Date.now()}`;
       console.log('📡 Fetching from:', API_URL + cacheBuster);
@@ -317,7 +317,7 @@ export default function Home() {
             <div>
               <h3 className="text-body font-bold text-blue-900 mb-1.5">How SPT Works</h3>
               <p className="text-body-sm text-gray-700 mb-2">
-                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>. DEXs compete with DEXs, lending platforms with lending platforms. 
+                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>—DEXs compete with DEXs, lending platforms with lending platforms. 
                 Metrics are standardized over a 90-day window using z-scores, enabling fair comparison across sizes and conditions.
               </p>
             </div>
@@ -467,18 +467,6 @@ export default function Home() {
                   onSort={handleSort}
                 />
               )}
-              
-              {data['liquid-staking'] && data['liquid-staking'].length > 0 && (
-                <ProtocolTable
-                  protocols={data['liquid-staking']}
-                  title="Liquid Staking Protocols"
-                  description="Ranked by staking dominance: total value staked (50%), fee revenue (25%), staking activity (15%), TVL growth (10%)"
-                  icon="💎"
-                  sortColumn={sortColumn}
-                  sortDirection={sortDirection}
-                  onSort={handleSort}
-                />
-              )}
             </section>
           </div>
         )}
@@ -516,7 +504,7 @@ export default function Home() {
                     />
                   </div>
                   <p className="text-xs text-gray-600 mb-3">
-                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias so a small, efficient protocol can outrank a large, inefficient one.
+                    Raw metrics like volume and fees are <strong>standardized using z-scores</strong> over 90 days. This removes size bias—a small, efficient protocol can outrank a large, inefficient one.
                   </p>
                   <div className="bg-gray-50 rounded p-2 text-xs text-gray-700">
                     <div className="font-mono mb-1">z = (x - μ) / σ</div>
@@ -550,10 +538,6 @@ export default function Home() {
                     <div className="bg-purple-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">CDP Performance</div>
                       <div className="text-gray-600">Minted 40% • Blue-chip Collateral 30% • Util 20% • Fees 10%</div>
-                    </div>
-                    <div className="bg-indigo-50 rounded px-2 py-1.5">
-                      <div className="font-semibold text-gray-700">Liquid Staking Performance</div>
-                      <div className="text-gray-600">TVL 50% • Fees 25% • Activity 15% • Growth 10%</div>
                     </div>
                   </div>
                 </div>

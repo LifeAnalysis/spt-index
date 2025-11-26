@@ -44,19 +44,9 @@ const PROTOCOLS = [
   'radiant',
   'benqi',
   'kamino-lend',
-  'jupiter-lend',
   // CDP - Collateralized Debt Position
   'liquity',       // Aggregated: V1 + V2
-  'crvusd',
-  'sky-lending',
-  'lista-cdp',
-  'avalon-usda',
-  // Liquid Staking
-  'lido',
-  'eigenlayer',
-  'ether.fi-stake',
-  'rocket-pool',
-  'jito-liquid-staking'
+  'crvusd'
 ];
 
 // Initialize caches
