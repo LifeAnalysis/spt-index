@@ -467,6 +467,18 @@ export default function Home() {
                   onSort={handleSort}
                 />
               )}
+              
+              {data['liquid-staking'] && data['liquid-staking'].length > 0 && (
+                <ProtocolTable
+                  protocols={data['liquid-staking']}
+                  title="Liquid Staking Protocols"
+                  description="Ranked by staking dominance: total value staked (50%), fee revenue (25%), staking activity (15%), TVL growth (10%)"
+                  icon="💎"
+                  sortColumn={sortColumn}
+                  sortDirection={sortDirection}
+                  onSort={handleSort}
+                />
+              )}
             </section>
           </div>
         )}
@@ -538,6 +550,10 @@ export default function Home() {
                     <div className="bg-purple-50 rounded px-2 py-1.5">
                       <div className="font-semibold text-gray-700">CDP Performance</div>
                       <div className="text-gray-600">Minted 40% • Blue-chip Collateral 30% • Util 20% • Fees 10%</div>
+                    </div>
+                    <div className="bg-indigo-50 rounded px-2 py-1.5">
+                      <div className="font-semibold text-gray-700">Liquid Staking Performance</div>
+                      <div className="text-gray-600">TVL 50% • Fees 25% • Activity 15% • Growth 10%</div>
                     </div>
                   </div>
                 </div>
