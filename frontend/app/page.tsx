@@ -24,11 +24,12 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      // Use Vercel API route which caches Railway backend data for ALL users
-      const API_URL = '/api/spt';
-      console.log('📡 Fetching from Vercel cache:', API_URL);
-      const res = await fetch(API_URL, {
-        cache: 'default' // Use browser + Vercel cache
+      // Fetch directly from Railway (Vercel API route times out on cold starts)
+      const RAILWAY_API = 'https://spt-index-production.up.railway.app/api/spt';
+      console.log('📡 Fetching from Railway:', RAILWAY_API);
+      const res = await fetch(RAILWAY_API, {
+        cache: 'default', // Use browser cache
+        signal: AbortSignal.timeout(120000) // 2 minute timeout for cold starts
       });
       
       console.log('📊 Response status:', res.status, res.ok);

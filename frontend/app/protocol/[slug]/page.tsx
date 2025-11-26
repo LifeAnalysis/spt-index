@@ -62,7 +62,7 @@ export default function ProtocolDetailPage() {
       setLoading(true);
       setError(null);
       
-      console.log(`Fetching protocol ${slug} from Vercel cache...`);
+      console.log(`Fetching protocol ${slug} from Railway...`);
       
       // Reuse cached SPT index data if available
       const cachedIndex = sessionStorage.getItem('spt-data');
@@ -77,9 +77,12 @@ export default function ProtocolDetailPage() {
         }
       }
       
-      // Use Vercel API route which caches Railway backend data for ALL users
-      const detailRes = await fetch(`/api/protocol/${slug}`, { 
-        cache: 'default' // Use browser + Vercel cache
+      const RAILWAY_API = 'https://spt-index-production.up.railway.app';
+      
+      // Fetch directly from Railway (Vercel API route times out on cold starts)
+      const detailRes = await fetch(`${RAILWAY_API}/api/protocol/${slug}`, { 
+        cache: 'default', // Use browser cache
+        signal: AbortSignal.timeout(120000) // 2 minute timeout for cold starts
       });
       
       if (!detailRes.ok) {
@@ -93,8 +96,9 @@ export default function ProtocolDetailPage() {
       
       // Fetch index data only if not cached
       if (!indexData) {
-        const indexRes = await fetch('/api/spt', {
-          cache: 'default' // Use browser + Vercel cache
+        const indexRes = await fetch(`${RAILWAY_API}/api/spt`, {
+          cache: 'default', // Use browser cache
+          signal: AbortSignal.timeout(120000) // 2 minute timeout for cold starts
         });
         if (!indexRes.ok) throw new Error('Failed to fetch SPT index');
         indexData = await indexRes.json();
