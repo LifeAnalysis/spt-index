@@ -269,7 +269,7 @@ export default function ProtocolDetailPage() {
                         {data.current.momentum === 'stable' && 'Holding Steady'}
                         {data.current.change30d && (
                           <span className="text-xs ml-1 font-normal">
-                            ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d ago)
+                            ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d avg)
                           </span>
                         )}
                       </div>
@@ -291,7 +291,7 @@ export default function ProtocolDetailPage() {
                            : 'text-rose-600'
                        }`}>
                          {data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length) ? '↑' : '↓'}
-                         {Math.abs(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}% vs 90d
+                         {Math.abs(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}% vs 90d avg
                 </div>
               )}
                   </div>
@@ -308,7 +308,7 @@ export default function ProtocolDetailPage() {
                            : 'text-rose-600'
                        }`}>
                          {data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length) ? '↑' : '↓'}
-                         {Math.abs(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}% vs 90d
+                         {Math.abs(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}% vs 90d avg
                     </div>
                     )}
                   </div>
@@ -327,7 +327,7 @@ export default function ProtocolDetailPage() {
                                : 'text-rose-600'
                            }`}>
                              {data.current.volume >= (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length) ? '↑' : '↓'}
-                             {Math.abs(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}% vs 90d
+                             {Math.abs(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}% vs 90d avg
                     </div>
                         )}
                   </div>
