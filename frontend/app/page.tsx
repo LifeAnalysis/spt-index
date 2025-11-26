@@ -166,6 +166,15 @@ export default function Home() {
     const scores24h = data.all.filter(p => p.change24h !== null);
     const positiveMovers24h = scores24h.filter(p => p.change24h! > 0).length;
     
+    // Top Performers Logic
+    const topByTVL = [...data.all].sort((a, b) => b.tvl - a.tvl).slice(0, 3);
+    const topByFees = [...data.all].sort((a, b) => b.fees - a.fees).slice(0, 3);
+    const topByVolume = [...data.all].sort((a, b) => b.volume - a.volume).slice(0, 3);
+    const topByEfficiency = [...data.all]
+      .filter(p => p.tvl > 1000000) // Filter out tiny TVL to avoid skewed efficiency
+      .sort((a, b) => (b.fees / b.tvl) - (a.fees / a.tvl))
+      .slice(0, 3);
+
     return {
       totalTVL,
       totalFees,
@@ -174,7 +183,11 @@ export default function Home() {
       avgScore,
       protocolCount: data.all.length,
       positiveMovers24h,
-      negativeMovers24h: scores24h.length - positiveMovers24h
+      negativeMovers24h: scores24h.length - positiveMovers24h,
+      topByTVL,
+      topByFees,
+      topByVolume,
+      topByEfficiency
     };
   };
 
@@ -194,62 +207,35 @@ export default function Home() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-transparent">
       {/* Top Navigation Bar */}
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-        <div className="container mx-auto px-4 sm:px-6 py-3">
-          {/* Mobile Layout */}
-          <div className="flex md:hidden justify-between items-center">
-            <div>
-              <h1 className="text-lg font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                SPT Index
-              </h1>
-              <p className="text-[10px] text-gray-500">Protocol Performance Analytics</p>
+      <nav className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
+          <div className="flex justify-between items-center">
+            {/* Brand */}
+            <div className="flex items-center gap-3 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#49997E] to-[#2c7a60] flex items-center justify-center shadow-lg shadow-[#49997E]/20 hover:scale-105 transition-transform">
+                <span className="text-white font-bold text-lg">S</span>
+              </div>
+              <div className="flex flex-col">
+                <h1 className="text-lg font-bold text-gray-900 leading-none tracking-tight">
+                  SPT Index
+                </h1>
+                <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mt-0.5">
+                  Protocol Analytics
+                </span>
+              </div>
             </div>
-            <button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="p-2 text-gray-600 hover:text-[#49997E] transition-colors"
-              aria-label="Toggle menu"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                {mobileMenuOpen ? (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                ) : (
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                )}
-              </svg>
-            </button>
-          </div>
 
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden mt-3 pt-3 border-t border-gray-200">
+            {/* Nav Items */}
+            <div className="flex items-center gap-4">
               <button
-                onClick={() => {
-                  router.push('/about');
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
+                onClick={() => router.push('/about')}
+                className="px-4 py-2 rounded-full bg-gray-50/50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 text-sm font-medium transition-all border border-gray-200/60 hover:border-gray-300"
               >
-                About SPT Index
+                About
               </button>
             </div>
-          )}
-
-          {/* Desktop Layout */}
-          <div className="hidden md:flex justify-between items-center">
-            <div>
-              <h1 className="text-h3 font-bold bg-gradient-to-r from-[#49997E] via-[#5eb896] to-[#49997E] bg-clip-text text-transparent">
-                SPT Index
-              </h1>
-              <p className="text-caption text-gray-500">Protocol Performance Analytics</p>
-            </div>
-            <button
-              onClick={() => router.push('/about')}
-              className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
-            >
-              About
-            </button>
           </div>
         </div>
       </nav>
@@ -257,7 +243,7 @@ export default function Home() {
       <div className="container mx-auto px-4 sm:px-6 py-6">
         {/* Page Title & Toggle */}
         <header className="mb-8 text-center animate-fade-in">
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-gradient-dark mb-3 tracking-tight">
              DeFi Efficiency Rankings
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2">
@@ -274,7 +260,7 @@ export default function Home() {
           {/* Collapsible Methodology Section */}
           <div className={`grid transition-all duration-300 ease-in-out overflow-hidden ${showInfo ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
             <div className="min-h-0 text-left">
-              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+              <div className="bg-glass rounded-2xl p-6">
                 <div className="grid md:grid-cols-3 gap-8">
                   {/* Col 1: The Philosophy */}
                   <div>
@@ -356,46 +342,102 @@ export default function Home() {
           <div className="animate-fade-in">
             <section className="mb-8">
               <h3 className="text-label font-semibold text-gray-500 uppercase tracking-wider mb-3">Market Overview</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-2">
-                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-2">
+                <div className="bg-glass rounded-xl p-4 sm:p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Total Protocols</div>
-                    <div className="text-xl sm:text-h2">📊</div>
+                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Total TVL</div>
+                    <div className="text-xl sm:text-h2">🔒</div>
                   </div>
-                  <div className="text-score-lg text-gray-900">{metrics.protocolCount}</div>
-                  <div className="text-caption text-gray-500 mt-1">
-                    <span className="text-emerald-600">↑ {metrics.positiveMovers24h}</span>
-                    {' • '}
-                    <span className="text-rose-600">↓ {metrics.negativeMovers24h}</span>
-                    <span className="text-gray-400"> (24h)</span>
+                  <div className="text-score-lg text-gray-900">{formatCurrency(metrics.totalTVL)}</div>
+                  <div className="text-caption text-gray-500 mt-1 flex items-center gap-1.5">
+                    <span>{metrics.protocolCount} protocols</span>
+                    <span className="text-gray-300 mx-0.5">•</span>
+                    <span className="text-emerald-600 font-medium text-xs">↑{metrics.positiveMovers24h}</span>
+                    <span className="text-rose-600 font-medium text-xs">↓{metrics.negativeMovers24h}</span>
+                  </div>
+                  
+                  <div className="mt-auto pt-3 border-t border-gray-100/80">
+                    <div className="space-y-1.5">
+                      {metrics.topByTVL.map((p, i) => (
+                        <div key={p.slug} className="flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-400 font-medium w-3">{i + 1}</span>
+                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                          </div>
+                          <span className="text-gray-500">{formatCurrency(p.tvl)}</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+                <div className="bg-glass rounded-xl p-4 sm:p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
                     <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Capital Efficiency</div>
                     <div className="text-xl sm:text-h2">⚡</div>
                   </div>
                   <div className="text-score-lg text-[#49997E]">{metrics.capitalEfficiency.toFixed(2)}%</div>
                   <div className="text-caption text-gray-500 mt-1">Annualized fee yield</div>
+                  
+                  <div className="mt-auto pt-3 border-t border-gray-100/80">
+                    <div className="space-y-1.5">
+                      {metrics.topByEfficiency.map((p, i) => (
+                        <div key={p.slug} className="flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-400 font-medium w-3">{i + 1}</span>
+                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                          </div>
+                          <span className="text-gray-500">{((p.fees / p.tvl) * 365 * 100).toFixed(1)}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+                <div className="bg-glass rounded-xl p-4 sm:p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
                     <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">24h Fees</div>
                     <div className="text-xl sm:text-h2">💵</div>
                   </div>
                   <div className="text-score-lg text-gray-900">{formatCurrency(metrics.totalFees)}</div>
                   <div className="text-caption text-gray-500 mt-1">Protocol revenue</div>
+                  
+                  <div className="mt-auto pt-3 border-t border-gray-100/80">
+                    <div className="space-y-1.5">
+                      {metrics.topByFees.map((p, i) => (
+                        <div key={p.slug} className="flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-400 font-medium w-3">{i + 1}</span>
+                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                          </div>
+                          <span className="text-gray-500">{formatCurrency(p.fees)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="bg-white rounded-lg border border-gray-200 p-4 sm:p-5 shadow-sm">
+                <div className="bg-glass rounded-xl p-4 sm:p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
                     <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">24h Volume</div>
                     <div className="text-xl sm:text-h2">📊</div>
                   </div>
                   <div className="text-score-lg text-gray-900">{formatCurrency(metrics.totalVolume)}</div>
                   <div className="text-caption text-gray-500 mt-1">Trading activity</div>
+                  
+                  <div className="mt-auto pt-3 border-t border-gray-100/80">
+                    <div className="space-y-1.5">
+                      {metrics.topByVolume.map((p, i) => (
+                        <div key={p.slug} className="flex justify-between items-center text-xs">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-gray-400 font-medium w-3">{i + 1}</span>
+                            <span className="font-medium text-gray-700 truncate max-w-[80px]">{p.protocol}</span>
+                          </div>
+                          <span className="text-gray-500">{formatCurrency(p.volume)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </div>
             </section>

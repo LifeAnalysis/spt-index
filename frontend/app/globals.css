@@ -62,7 +62,7 @@
 }
 
 body {
-  background: var(--background);
+  background: transparent;
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   font-size: var(--font-size-body);
@@ -162,4 +162,17 @@ body {
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Premium Utilities */
+.text-gradient-dark {
+  @apply bg-gradient-to-br from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent;
+}
+
+.bg-glass {
+  @apply bg-white/80 backdrop-blur-md border border-white/40 shadow-sm;
+}
+
+.bg-glass-hover {
+  @apply hover:bg-white/90 hover:shadow-md hover:border-white/60 transition-all duration-300;
 }

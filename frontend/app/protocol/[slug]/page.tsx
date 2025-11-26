@@ -184,21 +184,37 @@ export default function ProtocolDetailPage() {
   const weights = getWeights();
 
   return (
-    <div className="min-h-screen bg-gray-50/50">
-      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm backdrop-blur-md bg-white/90">
-        <div className="container mx-auto px-4 sm:px-6 py-3">
+    <div className="min-h-screen bg-transparent">
+      <nav className="sticky top-0 z-50 border-b border-gray-200/50 bg-white/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
+        <div className="container mx-auto px-4 sm:px-6 py-4">
           <div className="flex justify-between items-center">
+            {/* Left: Back + Brand */}
+            <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/')}
-              className="flex items-center text-gray-600 hover:text-[#49997E] transition-colors group"
+                className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100/50 hover:bg-gray-200/50 text-gray-500 hover:text-gray-900 transition-colors"
               >
-              <span className="mr-2 group-hover:-translate-x-1 transition-transform">←</span>
-                <span className="text-sm font-medium">Dashboard</span>
+                ←
               </button>
-            <h1 className="text-lg font-bold text-gray-900">SPT Index</h1>
+              <div className="flex items-center gap-3 cursor-pointer" onClick={() => router.push('/')}>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#49997E] to-[#2c7a60] flex items-center justify-center shadow-lg shadow-[#49997E]/20 hover:scale-105 transition-transform">
+                  <span className="text-white font-bold text-lg">S</span>
+                </div>
+                <div className="hidden sm:flex flex-col">
+                  <h1 className="text-lg font-bold text-gray-900 leading-none tracking-tight">
+                    SPT Index
+                  </h1>
+                  <span className="text-[11px] font-medium text-gray-500 uppercase tracking-wider mt-0.5">
+                    Protocol Analytics
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Right: About */}
             <button
               onClick={() => router.push('/about')}
-              className="text-sm text-gray-600 hover:text-[#49997E] transition-colors"
+              className="px-4 py-2 rounded-full bg-gray-50/50 hover:bg-gray-100 text-gray-600 hover:text-gray-900 text-sm font-medium transition-all border border-gray-200/60 hover:border-gray-300"
             >
               About
             </button>
@@ -212,7 +228,7 @@ export default function ProtocolDetailPage() {
           {/* LEFT SIDEBAR - INFO & METADATA */}
           <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
             {/* Identity Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
+            <div className="bg-glass rounded-2xl p-5 sm:p-6 hover:shadow-xl transition-shadow">
               <div className="mb-6">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
@@ -458,7 +474,7 @@ export default function ProtocolDetailPage() {
             <div className="bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
               <div className="grid md:grid-cols-2 lg:grid-cols-3 items-stretch divide-y md:divide-y-0 md:divide-x divide-gray-100">
                 {/* Main Score */}
-                <div className="p-8 flex flex-col justify-center bg-gradient-to-br from-[#49997E]/5 to-transparent relative">
+                <div className="p-6 sm:p-8 flex flex-col justify-center bg-gradient-to-br from-[#49997E]/5 to-transparent relative">
                   <div className="flex items-center gap-2 text-sm font-bold text-gray-500 uppercase tracking-wider mb-2 relative z-10">
                     SPT Score
                     <InfoTooltip content="Composite score (0-1) based on weighted, normalized metrics." position="right" />
@@ -517,10 +533,12 @@ export default function ProtocolDetailPage() {
             </div>
 
             {/* Main Chart Section */}
-            <div className="bg-white rounded-3xl border border-gray-200 shadow-lg hover:shadow-xl transition-shadow p-6 sm:p-8">
+            <div className="bg-white/80 backdrop-blur-md rounded-3xl border border-gray-200/50 shadow-lg hover:shadow-xl transition-shadow p-6 sm:p-8">
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                   <div>
-                  <h3 className="text-xl font-bold text-gray-900">Score Trajectory</h3>
+                  <h3 className="text-xl font-bold bg-gradient-to-br from-gray-900 to-gray-600 bg-clip-text text-transparent">
+                    Score Trajectory
+                  </h3>
                   <p className="text-sm text-gray-500">Historical performance vs category average</p>
                   </div>
                 <div className="flex items-center gap-3">
@@ -556,26 +574,26 @@ export default function ProtocolDetailPage() {
               <div className="h-[400px] w-full">
                 {chartData.length > 0 ? (
                   <ResponsiveContainer width="100%" height="100%">
-                    <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                    <AreaChart data={chartData} margin={{ top: 10, right: 90, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#49997E" stopOpacity={0.2}/>
-                          <stop offset="95%" stopColor="#49997E" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#FFFFFF" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#FFFFFF" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
                       <XAxis 
                         dataKey="dateStr" 
-                        stroke="#9ca3af"
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        stroke="#6b7280"
+                        tick={{ fill: '#4b5563', fontSize: 11, fontWeight: 500 }}
                         tickLine={false}
                         axisLine={false}
                         dy={10}
                         minTickGap={30}
                       />
                       <YAxis 
-                        stroke="#9ca3af"
-                        tick={{ fill: '#9ca3af', fontSize: 12 }}
+                        stroke="#6b7280"
+                        tick={{ fill: '#4b5563', fontSize: 11, fontWeight: 500 }}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => value.toFixed(3)}
@@ -623,10 +641,11 @@ export default function ProtocolDetailPage() {
                           stroke="#9ca3af" 
                           strokeDasharray="3 3"
                           label={{ 
-                            value: 'Avg', 
+                            value: 'Category Avg', 
                             position: 'right', 
-                            fill: '#9ca3af', 
-                            fontSize: 12 
+                            fill: '#6b7280', 
+                            fontSize: 11,
+                            fontWeight: 600
                           }}
                         />
                       )}
@@ -637,10 +656,11 @@ export default function ProtocolDetailPage() {
                            strokeDasharray="3 3" 
                            strokeOpacity={0.5}
                            label={{ 
-                             value: 'High', 
+                             value: 'Period High', 
                              position: 'right', 
-                             fill: '#10b981', 
-                             fontSize: 12 
+                             fill: '#059669', 
+                             fontSize: 11,
+                             fontWeight: 600
                            }} 
                         />
                       )}

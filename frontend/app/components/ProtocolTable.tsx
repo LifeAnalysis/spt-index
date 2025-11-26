@@ -116,6 +116,7 @@ export default function ProtocolTable({
           <span className="text-xl">{icon}</span>
           {title}
         </h2>
+        <p className="text-xs text-gray-500 mt-1 leading-relaxed">{description}</p>
       </div>
 
       {/* Mobile Cards (< 768px) */}
@@ -126,11 +127,11 @@ export default function ProtocolTable({
       </div>
 
       {/* Desktop Table (>= 768px) */}
-      <div className="hidden md:block bg-white rounded-2xl border border-gray-200 shadow-lg shadow-gray-100/50 overflow-hidden">
+      <div className="hidden md:block bg-glass rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full table-fixed">
             <thead>
-              <tr className="bg-gray-50/50 border-b border-gray-200">
+              <tr className="bg-white/50 border-b border-gray-200/50">
                 <th className="w-[28%] px-6 py-4">
                   <button
                     onClick={() => onSort('protocol')}
