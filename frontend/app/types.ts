@@ -46,6 +46,7 @@ export interface SPTData {
   dex: Protocol[];
   lending: Protocol[];
   cdp?: Protocol[];
+  'liquid-staking'?: Protocol[];
   all: Protocol[];
   _metadata?: {
     cached: boolean;
