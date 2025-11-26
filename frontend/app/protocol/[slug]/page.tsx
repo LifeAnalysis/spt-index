@@ -165,11 +165,13 @@ export default function ProtocolDetailPage() {
         { name: 'Revenue', value: 15, color: '#10b981' }
       ];
     } else if (data.type === 'liquid-staking') {
+      // Note: Backend currently scores liquid-staking using lending weights
+      // TODO: Add dedicated liquid-staking scoring in backend
       return [
-        { name: 'TVL', value: 35, color: '#3b82f6' },
-        { name: 'Yield', value: 30, color: '#8b5cf6' },
-        { name: 'Revenue', value: 20, color: '#10b981' },
-        { name: 'Growth', value: 15, color: '#f59e0b' }
+        { name: 'Borrow', value: 40, color: '#3b82f6' },
+        { name: 'Vanilla', value: 25, color: '#8b5cf6' },
+        { name: 'Util', value: 20, color: '#f59e0b' },
+        { name: 'Revenue', value: 15, color: '#10b981' }
       ];
     } else {
       return [
