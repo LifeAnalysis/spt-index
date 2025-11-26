@@ -592,6 +592,7 @@ export async function getSPTIndex(protocols) {
   const dexProtocols = validMetrics.filter(p => p.type === 'dex');
   const lendingProtocols = validMetrics.filter(p => p.type === 'lending');
   const cdpProtocols = validMetrics.filter(p => p.type === 'cdp');
+  const liquidStakingProtocols = validMetrics.filter(p => p.type === 'liquid-staking');
   
   // Build cohort-wide historical metrics for each type
   const buildCohortMetrics = (protocolList) => {
