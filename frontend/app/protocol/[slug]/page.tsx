@@ -250,28 +250,24 @@ export default function ProtocolDetailPage() {
             )}
             
               {/* Growth Momentum Indicator */}
-              {data.current.momentum && (
+              {data.current.change30d !== undefined && data.current.change30d !== null && (
                 <div className="mb-4 pb-4 border-b border-gray-100">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">
-                      {data.current.momentum === 'growing' && '📈'}
-                      {data.current.momentum === 'declining' && '📉'}
-                      {data.current.momentum === 'stable' && '➡️'}
+                      {data.current.change30d > 2 ? '📈' : data.current.change30d < -2 ? '📉' : '➡️'}
                     </span>
                     <div>
                       <div className="text-xs text-gray-400 uppercase tracking-wider font-medium">30-Day Trend</div>
                       <div className={`text-sm font-bold ${
-                        data.current.momentum === 'growing' ? 'text-emerald-600' :
-                        data.current.momentum === 'declining' ? 'text-rose-600' : 'text-blue-600'
+                        data.current.change30d > 2 ? 'text-emerald-600' :
+                        data.current.change30d < -2 ? 'text-rose-600' : 'text-blue-600'
                       }`}>
-                        {data.current.momentum === 'growing' && 'Gaining Momentum'}
-                        {data.current.momentum === 'declining' && 'Losing Steam'}
-                        {data.current.momentum === 'stable' && 'Holding Steady'}
-                        {data.current.change30d && (
-                          <span className="text-xs ml-1 font-normal">
-                            ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d avg)
-                          </span>
-                        )}
+                        {data.current.change30d > 2 && 'Gaining Momentum'}
+                        {data.current.change30d < -2 && 'Losing Steam'}
+                        {data.current.change30d >= -2 && data.current.change30d <= 2 && 'Holding Steady'}
+                        <span className="text-xs ml-1 font-normal">
+                          ({data.current.change30d >= 0 ? '+' : ''}{data.current.change30d.toFixed(1)}% vs 30d avg)
+                        </span>
                       </div>
                     </div>
                   </div>
