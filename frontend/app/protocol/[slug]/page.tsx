@@ -30,15 +30,26 @@ export default function ProtocolDetailPage() {
       setError(null);
       
       const RAILWAY_API = 'https://spt-index-production.up.railway.app';
+      const cacheBuster = `?t=${Date.now()}`;
       
-      const headers: HeadersInit = {};
+      const headers: HeadersInit = {
+        'Cache-Control': 'no-cache'
+      };
       if (etag) {
         headers['If-None-Match'] = etag;
       }
       
+      console.log(`Fetching protocol ${slug} from Railway...`);
+      
       const [detailRes, indexRes] = await Promise.all([
-        fetch(`${RAILWAY_API}/api/protocol/${slug}`, { headers }),
-        fetch(`${RAILWAY_API}/api/spt`)
+        fetch(`${RAILWAY_API}/api/protocol/${slug}${cacheBuster}`, { 
+          headers,
+          cache: 'no-store'
+        }),
+        fetch(`${RAILWAY_API}/api/spt${cacheBuster}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        })
       ]);
       
       if (detailRes.status === 304) {
@@ -83,8 +94,10 @@ export default function ProtocolDetailPage() {
         }
       };
       
+      console.log(`✅ Successfully loaded ${slug} data`);
       setData(mergedData);
     } catch (err) {
+      console.error('Error fetching protocol data:', err);
       setError(err instanceof Error ? err.message : 'Unknown error occurred');
     } finally {
       setLoading(false);
