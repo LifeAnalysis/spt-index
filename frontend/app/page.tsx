@@ -163,7 +163,6 @@ export default function Home() {
     const totalTVL = data.all.reduce((sum, p) => sum + p.tvl, 0);
     const totalFees = data.all.reduce((sum, p) => sum + p.fees, 0);
     const totalVolume = data.all.reduce((sum, p) => sum + p.volume, 0);
-    const avgScore = data.all.reduce((sum, p) => sum + p.score, 0) / data.all.length;
     
     const scores24h = data.all.filter(p => p.change24h !== null);
     const positiveMovers24h = scores24h.filter(p => p.change24h! > 0).length;
@@ -172,20 +171,24 @@ export default function Home() {
     const topByTVL = [...data.all].sort((a, b) => b.tvl - a.tvl).slice(0, 3);
     const topByFees = [...data.all].sort((a, b) => b.fees - a.fees).slice(0, 3);
     const topByVolume = [...data.all].sort((a, b) => b.volume - a.volume).slice(0, 3);
-    const topByScore = [...data.all].sort((a, b) => b.score - a.score).slice(0, 3);
+    
+    // Top Gainers - protocols with biggest 24h score increase
+    const topGainers = [...data.all]
+      .filter(p => p.change24h !== null && p.change24h > 0)
+      .sort((a, b) => (b.change24h || 0) - (a.change24h || 0))
+      .slice(0, 3);
 
     return {
       totalTVL,
       totalFees,
       totalVolume,
-      avgScore,
       protocolCount: data.all.length,
       positiveMovers24h,
       negativeMovers24h: scores24h.length - positiveMovers24h,
       topByTVL,
       topByFees,
       topByVolume,
-      topByScore
+      topGainers
     };
   };
 
@@ -376,15 +379,17 @@ export default function Home() {
 
                 <div className="bg-glass rounded-xl p-4 sm:p-5 flex flex-col h-full">
                   <div className="flex justify-between items-start mb-2">
-                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Avg Score</div>
-                    <div className="text-xl sm:text-h2">📊</div>
+                    <div className="text-caption font-medium text-gray-500 uppercase tracking-wide">Top Gainers</div>
+                    <div className="text-xl sm:text-h2">🚀</div>
                   </div>
-                  <div className="text-score-lg text-[#49997E]">{metrics.avgScore.toFixed(4)}</div>
-                  <div className="text-caption text-gray-500 mt-1">Index benchmark</div>
+                  <div className="text-score-lg text-emerald-600">
+                    {metrics.topGainers[0] ? `↑${metrics.topGainers[0].change24h?.toFixed(1)}%` : 'N/A'}
+                  </div>
+                  <div className="text-caption text-gray-500 mt-1">24h score change</div>
                   
                   <div className="mt-auto pt-3 border-t border-gray-100/80">
                     <div className="space-y-1.5">
-                      {metrics.topByScore.map((p, i) => (
+                      {metrics.topGainers.map((p, i) => (
                         <div key={p.slug} className="flex justify-between items-center text-xs">
                           <div className="flex items-center gap-1.5">
                             <span className="text-gray-400 font-medium w-3">{i + 1}</span>
@@ -395,7 +400,7 @@ export default function Home() {
                             )}
                             <span className="font-medium text-gray-700 truncate max-w-[60px]">{p.protocol}</span>
                           </div>
-                          <span className="text-[#49997E] font-medium">{p.score.toFixed(4)}</span>
+                          <span className="text-emerald-600 font-medium">↑{p.change24h?.toFixed(1)}%</span>
                         </div>
                       ))}
                     </div>
