@@ -218,14 +218,9 @@ export default function ProtocolTable({
                             <span className="text-lg">{icon}</span>
                           )}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold text-gray-900 group-hover:text-[#49997E] transition-colors">
-                            {protocol.protocol}
-                          </span>
-                          <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
-                            {protocol.type}
-                          </span>
-                        </div>
+                        <span className="text-sm font-bold text-gray-900 group-hover:text-[#49997E] transition-colors">
+                          {protocol.protocol}
+                        </span>
                       </Link>
                     </td>
 
