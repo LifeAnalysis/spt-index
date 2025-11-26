@@ -228,19 +228,6 @@ export default function Home() {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="md:hidden mt-3 pt-3 border-t border-gray-200 space-y-3">
-              {data?._metadata && (
-                <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-lg text-sm">
-                  <div className={`w-2 h-2 rounded-full ${data._metadata.cached ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
-                  <span className="text-caption text-gray-600 font-medium">
-                    {data._metadata.cached ? `Cached (${data._metadata.cacheAge}s)` : 'Live'}
-                  </span>
-                </div>
-              )}
-              {lastUpdated && (
-                <div className="text-caption text-gray-500 px-3">
-                  Updated: {lastUpdated.toLocaleTimeString()}
-                </div>
-              )}
               <button
                 onClick={() => {
                   router.push('/about');
@@ -272,19 +259,6 @@ export default function Home() {
               <p className="text-caption text-gray-500">Protocol Performance Analytics</p>
             </div>
             <div className="flex items-center gap-4">
-              {data?._metadata && (
-                <div className="flex items-center gap-2 bg-gray-50 px-3 py-1.5 rounded-lg">
-                  <div className={`w-2 h-2 rounded-full ${data._metadata.cached ? 'bg-amber-500' : 'bg-emerald-500'}`}></div>
-                  <span className="text-caption text-gray-600 font-medium">
-                    {data._metadata.cached ? `Cached (${data._metadata.cacheAge}s)` : 'Live'}
-                  </span>
-                </div>
-              )}
-              {lastUpdated && (
-                <span className="text-caption text-gray-500">
-                  {lastUpdated.toLocaleString()}
-                </span>
-              )}
               <button
                 onClick={() => router.push('/about')}
                 className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
