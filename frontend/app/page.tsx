@@ -16,6 +16,7 @@ export default function Home() {
   const [sortColumn, setSortColumn] = useState<SortColumn>('score');
   const [sortDirection, setSortDirection] = useState<SortDirection>('desc');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showInfo, setShowInfo] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -254,49 +255,66 @@ export default function Home() {
       </nav>
 
       <div className="container mx-auto px-4 sm:px-6 py-6">
-        {/* Page Title & Description */}
-        <header className="mb-6">
-          <h2 className="text-h1 text-gray-900 mb-2">Beyond TVL: A Performance-Based Scoreboard</h2>
-          <p className="text-body text-gray-600 mb-3">
-            TVL measures capital attraction, not productivity. A protocol can show billions in TVL while most of it sits idle or is recursively looped to inflate on-chain optics. 
-            <strong> SPT quantifies what TVL hides</strong>: actual activity, efficiency, and revenue generation.
+        {/* Page Title & Toggle */}
+        <header className="mb-8 text-center animate-fade-in">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3 tracking-tight">
+             DeFi Efficiency Rankings
+          </h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto flex flex-col sm:flex-row items-center justify-center gap-2">
+            <span>Measuring true protocol productivity beyond TVL.</span>
+            <button 
+              onClick={() => setShowInfo(!showInfo)}
+              className="text-[#49997E] font-semibold hover:text-[#3d8268] hover:underline focus:outline-none flex items-center gap-1 transition-colors"
+            >
+              {showInfo ? 'Hide Methodology' : 'How it works'} 
+              <span className={`transform transition-transform duration-200 ${showInfo ? 'rotate-180' : ''}`}>▼</span>
+            </button>
           </p>
-          
-          {/* Mobile-optimized explanation boxes */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 space-y-3">
-            <div>
-              <h3 className="text-body font-bold text-blue-900 mb-1.5">How SPT Works</h3>
-              <p className="text-body-sm text-gray-700 mb-2">
-                Each protocol is evaluated against <strong>peer cohorts in the same category</strong>. DEXs compete with DEXs, lending platforms with lending platforms. 
-                Metrics are standardized over a 90-day window using z-scores, enabling fair comparison across sizes and conditions.
-              </p>
-            </div>
-            
-            <div className="grid sm:grid-cols-2 gap-3">
-              <div className="bg-white rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-lg">🏆</span>
-                  <span className="text-body-sm font-bold text-gray-900">SPT Score</span>
+
+          {/* Collapsible Methodology Section */}
+          <div className={`grid transition-all duration-300 ease-in-out overflow-hidden ${showInfo ? 'grid-rows-[1fr] opacity-100 mt-6' : 'grid-rows-[0fr] opacity-0 mt-0'}`}>
+            <div className="min-h-0 text-left">
+              <div className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm">
+                <div className="grid md:grid-cols-3 gap-8">
+                  {/* Col 1: The Philosophy */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3 text-[#49997E]">
+                      <span className="text-xl">🎯</span>
+                      <h3 className="font-bold text-gray-900">Beyond Vanity Metrics</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      TVL measures capital attraction, not productivity. A protocol can show billions in TVL while most of it sits idle. 
+                      <strong> SPT quantifies efficiency</strong>: actual activity and revenue generation per dollar of TVL.
+                    </p>
+                  </div>
+
+                  {/* Col 2: The Method */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3 text-blue-600">
+                      <span className="text-xl">⚖️</span>
+                      <h3 className="font-bold text-gray-900">Fair Comparison</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Protocols are evaluated against <strong>peer cohorts</strong>. DEXs compete with DEXs, lending platforms with lending platforms. Metrics are standardized using <strong>z-scores</strong> over 90 days, allowing small, efficient protocols to fairly compete with giants.
+                    </p>
+                  </div>
+
+                  {/* Col 3: The Score */}
+                  <div>
+                    <div className="flex items-center gap-2 mb-3 text-amber-500">
+                      <span className="text-xl">🏆</span>
+                      <h3 className="font-bold text-gray-900">The SPT Score</h3>
+                    </div>
+                    <p className="text-sm text-gray-600 leading-relaxed mb-2">
+                      A composite score (0-1) rating efficiency.
+                    </p>
+                    <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-700 border border-gray-100">
+                      <strong>Example:</strong><br/>
+                      $2B TVL @ 60% util <span className="text-emerald-600 font-bold">BEATS</span><br/>
+                      $10B TVL @ 10% util
+                    </div>
+                  </div>
                 </div>
-                <p className="text-body-sm text-gray-700">
-                  Cross-protocol ranking. A smaller, efficient protocol can outrank a larger, underperforming one.
-                </p>
-                <p className="text-caption text-gray-600 mt-1 italic">
-                  Example: $2B TVL at 60% utilization beats $10B at 10% utilization.
-                </p>
-              </div>
-              
-              <div className="bg-white rounded-lg p-3 border border-blue-100">
-                <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-lg">📈</span>
-                  <span className="text-body-sm font-bold text-gray-900">Trend</span>
-                </div>
-                <p className="text-body-sm text-gray-700">
-                  Self-comparison. Is this protocol's efficiency improving or declining vs. its own 90-day baseline?
-                </p>
-                <p className="text-caption text-gray-600 mt-1 italic">
-                  Shows operational momentum, not just static rank.
-                </p>
               </div>
             </div>
           </div>
