@@ -222,7 +222,7 @@ export default function Home() {
 
           {/* Mobile Menu */}
           {mobileMenuOpen && (
-            <div className="md:hidden mt-3 pt-3 border-t border-gray-200 space-y-3">
+            <div className="md:hidden mt-3 pt-3 border-t border-gray-200">
               <button
                 onClick={() => {
                   router.push('/about');
@@ -231,16 +231,6 @@ export default function Home() {
                 className="w-full px-3 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
               >
                 About SPT Index
-              </button>
-              <button
-                onClick={() => {
-                  fetchData();
-                  setMobileMenuOpen(false);
-                }}
-                disabled={loading}
-                className="w-full px-3 py-2 bg-gradient-to-r from-[#49997E] to-[#5eb896] hover:from-[#3d8268] hover:to-[#49997E] text-white rounded-lg text-caption font-medium transition-all disabled:opacity-50 shadow-sm"
-              >
-                {loading ? 'Loading...' : 'Refresh Data'}
               </button>
             </div>
           )}
@@ -253,21 +243,12 @@ export default function Home() {
               </h1>
               <p className="text-caption text-gray-500">Protocol Performance Analytics</p>
             </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push('/about')}
-                className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
-              >
-                About
-              </button>
-              <button
-                onClick={() => fetchData()}
-                disabled={loading}
-                className="px-4 py-2 bg-gradient-to-r from-[#49997E] to-[#5eb896] hover:from-[#3d8268] hover:to-[#49997E] text-white rounded-lg text-caption font-medium transition-all disabled:opacity-50 shadow-sm"
-              >
-                {loading ? 'Loading...' : 'Refresh Data'}
-              </button>
-            </div>
+            <button
+              onClick={() => router.push('/about')}
+              className="px-4 py-2 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 rounded-lg text-caption font-medium transition-all"
+            >
+              About
+            </button>
           </div>
         </div>
       </nav>

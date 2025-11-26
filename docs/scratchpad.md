@@ -10,20 +10,23 @@
 
 ---
 
-### [2025-11-26] Typography and Content Improvements
-**Context:** User requested removal of em dashes (—) throughout the website and addition of CDP protocol methodology to the about page.
+### [2025-11-26] Typography and Content Improvements (COMPLETE)
+**Context:** User requested complete removal of all em dashes (—) throughout the website and addition of CDP protocol methodology to the about page.
 
 **Action:**
-1. **Removed all em dashes** from the website, replacing them with:
-   - Periods and separate sentences for better readability
-   - Colons where appropriate
+1. **Completely removed all em dashes** from the website, replacing them with:
+   - "N/A" for empty values in tables and data displays
+   - Periods and separate sentences for better readability in prose
+   - Colons where appropriate to introduce explanations
    - "because" or "so" for causal relationships
    
-   Files updated:
-   - `frontend/app/about/page.tsx` (7 instances)
-   - `frontend/app/page.tsx` (2 instances)
-   - `frontend/app/protocol/[slug]/page.tsx` (1 instance in tooltip)
+   Files updated (15 total instances):
+   - `frontend/app/about/page.tsx` (7 instances in text content)
+   - `frontend/app/page.tsx` (2 instances in text content)
+   - `frontend/app/protocol/[slug]/page.tsx` (2 instances - 1 in formatChange function, 1 in score display)
+   - `frontend/app/components/ProtocolTable.tsx` (2 instances for empty values)
    - `frontend/app/layout.tsx` (1 instance in meta description)
+   - `frontend/app/utils.ts` (1 instance in formatCurrency function)
 
 2. **Added CDP Protocol methodology** to the about page:
    - Created new methodology card for CDP/Stablecoin protocols
@@ -32,6 +35,9 @@
    - Used purple theme for CDP card to distinguish from DEX (blue) and Lending (green)
 
 **Outcome:** 
+- Verified: Zero em dashes remain in the codebase (confirmed via grep search)
 - More professional, readable text throughout the site
+- Consistent use of "N/A" for missing data
 - Complete methodology documentation now covers all three protocol types
 - Consistent visual hierarchy with the three-column methodology grid
+- No linter errors introduced
