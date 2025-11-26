@@ -5,6 +5,7 @@ export interface LendingMetrics {
   vanillaSupply: number;
   vanillaUtilization: number;
   vanillaSupplyRatio: number;
+  bluechipCollateralRatio: number;
   pools?: Array<{
     symbol: string;
     chain: string;
