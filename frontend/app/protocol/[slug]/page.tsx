@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar, Cell } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, BarChart, Bar, Cell, ReferenceLine } from 'recharts';
 import InfoTooltip from '../../components/InfoTooltip';
 import { ProtocolDetail } from '../../types';
 import { formatCurrency, getScoreRating } from '../../utils';
@@ -18,6 +18,7 @@ export default function ProtocolDetailPage() {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
   const [showMomentum, setShowMomentum] = useState(false);
   const [etag, setEtag] = useState<string | null>(null);
+  const [categoryAvg, setCategoryAvg] = useState<number | null>(null);
 
   useEffect(() => {
     fetchProtocolDetail();
@@ -56,8 +57,19 @@ export default function ProtocolDetailPage() {
       const detailData = await detailRes.json();
       const indexData = await indexRes.json();
       
-      const allProtocols = [...(indexData.dex || []), ...(indexData.lending || [])];
+      const allProtocols = [...(indexData.dex || []), ...(indexData.lending || []), ...(indexData.cdp || [])];
       const cohortData = allProtocols.find((p: any) => p.slug === slug);
+      
+      // Calculate category average
+      let categoryProtocols = [];
+      if (detailData.type === 'dex') categoryProtocols = indexData.dex || [];
+      else if (detailData.type === 'lending') categoryProtocols = indexData.lending || [];
+      else if (detailData.type === 'cdp') categoryProtocols = indexData.cdp || [];
+      
+      if (categoryProtocols.length > 0) {
+        const avg = categoryProtocols.reduce((sum: number, p: any) => sum + p.score, 0) / categoryProtocols.length;
+        setCategoryAvg(avg);
+      }
       
       const mergedData = {
         ...detailData,
@@ -86,7 +98,7 @@ export default function ProtocolDetailPage() {
     return `${arrow} ${Math.abs(change).toFixed(2)}%`;
   };
 
-  const filterHistoryByRange = () => {
+  const chartData = useMemo(() => {
     if (!data?.history) return [];
     const days = timeRange === '7d' ? 7 : timeRange === '30d' ? 30 : 90;
     const cutoff = Date.now() / 1000 - (days * 86400);
@@ -96,7 +108,12 @@ export default function ProtocolDetailPage() {
         ...point,
         dateStr: point.date
       }));
-  };
+  }, [data, timeRange]);
+
+  const periodMax = useMemo(() => {
+    if (chartData.length === 0) return 0;
+    return Math.max(...chartData.map(d => d.score));
+  }, [chartData]);
 
   if (loading) {
     return (
@@ -118,7 +135,6 @@ export default function ProtocolDetailPage() {
     );
   }
 
-  const chartData = filterHistoryByRange();
   const rating = data?.current?.score !== undefined ? getScoreRating(data.current.score) : { label: 'N/A', color: 'text-gray-500 bg-gray-100' };
 
   // Helper to get metric weights based on type
@@ -178,7 +194,7 @@ export default function ProtocolDetailPage() {
           {/* LEFT SIDEBAR - INFO & METADATA */}
           <aside className="lg:col-span-4 xl:col-span-3 space-y-6">
             {/* Identity Card */}
-            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow sticky top-24">
+            <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
               <div className="flex items-center justify-between mb-6">
                 <span className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                   data.type === 'dex' ? 'bg-blue-50 text-blue-700' : 
@@ -196,10 +212,10 @@ export default function ProtocolDetailPage() {
                     <a href={data.twitter} target="_blank" rel="noopener" className="text-gray-400 hover:text-[#49997E] transition-colors">
                       <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.84 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
                     </a>
-                  )}
-                </div>
+                )}
               </div>
-              
+            </div>
+
               <div className="flex items-center gap-4 mb-4">
                 {data.logo && (
                   <div className="w-12 h-12 rounded-full bg-gray-50 border border-gray-100 p-1 flex-shrink-0 shadow-sm">
@@ -211,8 +227,8 @@ export default function ProtocolDetailPage() {
                   </div>
                 )}
                 <h1 className="text-3xl font-bold text-gray-900">{data.name}</h1>
-            </div>
-
+              </div>
+              
             {data.description && (
                 <p className="text-sm text-gray-600 leading-relaxed mb-4">
                   {data.description}
@@ -264,25 +280,14 @@ export default function ProtocolDetailPage() {
                         {data.current.change30d && ` (${data.current.change30d >= 0 ? '+' : ''}${data.current.change30d.toFixed(1)}% avg 30d)`}
                 </div>
               </div>
-                  </div>
                 </div>
+              </div>
               )}
               
               {/* Quick Stats List */}
               <div className="space-y-4">
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-medium text-gray-500 mt-1">Total TVL</span>
-                    {data.historicalMetrics && data.historicalMetrics.tvl.length >= 7 && (
-                      <span className="text-sm">
-                        {(() => {
-                          const last7Days = data.historicalMetrics.tvl.slice(-7);
-                          const trend = last7Days[last7Days.length - 1] > last7Days[0];
-                          return trend ? '📈' : '📉';
-                        })()}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm font-medium text-gray-500 mt-1">Total TVL</span>
                   <div className="text-right">
                     <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.tvl)}</div>
                     {data.historicalMetrics && (
@@ -293,24 +298,13 @@ export default function ProtocolDetailPage() {
                        }`}>
                          {data.current.tvl >= (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length) ? '↑' : '↓'}
                          {Math.abs(((data.current.tvl / (data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)) - 1) * 100).toFixed(1)}% vs 90d
-                       </div>
-                    )}
+                </div>
+              )}
                   </div>
                 </div>
 
                 <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-1">
-                    <span className="text-sm font-medium text-gray-500 mt-1">24h Fees</span>
-                    {data.historicalMetrics && data.historicalMetrics.fees.length >= 7 && (
-                      <span className="text-sm">
-                        {(() => {
-                          const last7Days = data.historicalMetrics.fees.slice(-7);
-                          const trend = last7Days[last7Days.length - 1] > last7Days[0];
-                          return trend ? '📈' : '📉';
-                        })()}
-                      </span>
-                    )}
-                  </div>
+                  <span className="text-sm font-medium text-gray-500 mt-1">24h Fees</span>
                   <div className="text-right">
                     <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.fees)}</div>
                     {data.historicalMetrics && (
@@ -321,7 +315,7 @@ export default function ProtocolDetailPage() {
                        }`}>
                          {data.current.fees >= (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length) ? '↑' : '↓'}
                          {Math.abs(((data.current.fees / (data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)) - 1) * 100).toFixed(1)}% vs 90d
-                       </div>
+                    </div>
                     )}
                   </div>
                 </div>
@@ -329,18 +323,7 @@ export default function ProtocolDetailPage() {
                 {data.type === 'dex' && (
                   <>
                     <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-medium text-gray-500 mt-1">24h Volume</span>
-                        {data.historicalMetrics && data.historicalMetrics.volume.length >= 7 && (
-                          <span className="text-sm">
-                            {(() => {
-                              const last7Days = data.historicalMetrics.volume.slice(-7);
-                              const trend = last7Days[last7Days.length - 1] > last7Days[0];
-                              return trend ? '📈' : '📉';
-                            })()}
-                          </span>
-                        )}
-                      </div>
+                      <span className="text-sm font-medium text-gray-500 mt-1">24h Volume</span>
                       <div className="text-right">
                         <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.volume)}</div>
                          {data.historicalMetrics && (
@@ -351,33 +334,15 @@ export default function ProtocolDetailPage() {
                            }`}>
                              {data.current.volume >= (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length) ? '↑' : '↓'}
                              {Math.abs(((data.current.volume / (data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)) - 1) * 100).toFixed(1)}% vs 90d
-                           </div>
+                    </div>
                         )}
-                      </div>
+                  </div>
                     </div>
                     {data.current.dexMetrics && (
                       <div className="flex justify-between items-center">
                         <span className="text-sm font-medium text-gray-500">Cap. Efficiency</span>
                         <span className="text-base font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
-                      </div>
-                    )}
-                    {data.historicalMetrics && data.historicalMetrics.fees && data.historicalMetrics.fees.length >= 30 && (
-                      <div className="flex justify-between items-start">
-                        <span className="text-sm font-medium text-gray-500 mt-1">Fee Growth (30d)</span>
-                        <div className="text-right">
-                          {(() => {
-                            const last30Days = data.historicalMetrics.fees.slice(-30);
-                            const first15Avg = last30Days.slice(0, 15).reduce((a, b) => a + b, 0) / 15;
-                            const last15Avg = last30Days.slice(-15).reduce((a, b) => a + b, 0) / 15;
-                            const growthRate = ((last15Avg - first15Avg) / first15Avg) * 100;
-                            return (
-                              <div className={`text-base font-bold ${growthRate >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                                {growthRate >= 0 ? '+' : ''}{growthRate.toFixed(1)}%
-                              </div>
-                            );
-                          })()}
-                        </div>
-                      </div>
+                  </div>
                     )}
                   </>
                 )}
@@ -403,20 +368,7 @@ export default function ProtocolDetailPage() {
                       <span className="text-base font-bold text-gray-900">
                         {formatCurrency(data.current.lendingMetrics.supplyVolume)}
                       </span>
-                    </div>
-                    <div className="flex justify-between items-start">
-                      <span className="text-sm font-medium text-gray-500 mt-1">Vanilla Assets</span>
-                      <div className="text-right">
-                        <div className="text-base font-bold text-gray-900">{formatCurrency(data.current.lendingMetrics.vanillaSupply)}</div>
-                        <div className="text-xs text-gray-500">
-                      {data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}% of supply
-                    </div>
                   </div>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm font-medium text-gray-500">Vanilla Util.</span>
-                      <span className="text-base font-bold text-gray-900">{data.current.lendingMetrics.vanillaUtilization.toFixed(1)}%</span>
-                    </div>
                   </>
                 )}
 
@@ -429,22 +381,22 @@ export default function ProtocolDetailPage() {
                          <span className="text-sm font-semibold text-gray-700">
                            {formatCurrency(data.historicalMetrics.fees.reduce((a, b) => a + b, 0) / data.historicalMetrics.fees.length)}
                          </span>
-                       </div>
+                    </div>
                        {data.type === 'dex' && (
                          <div className="flex justify-between items-center">
                            <span className="text-xs font-medium text-gray-500">Avg Volume</span>
                            <span className="text-sm font-semibold text-gray-700">
                              {formatCurrency(data.historicalMetrics.volume.reduce((a, b) => a + b, 0) / data.historicalMetrics.volume.length)}
                            </span>
-                         </div>
+                    </div>
                        )}
                        <div className="flex justify-between items-center">
                          <span className="text-xs font-medium text-gray-500">Avg TVL</span>
                          <span className="text-sm font-semibold text-gray-700">
                            {formatCurrency(data.historicalMetrics.tvl.reduce((a, b) => a + b, 0) / data.historicalMetrics.tvl.length)}
                          </span>
-                       </div>
-                     </div>
+                    </div>
+                  </div>
                    </div>
                 )}
 
@@ -458,10 +410,10 @@ export default function ProtocolDetailPage() {
                         </span>
                       ))}
                     </div>
-                  </div>
-                )}
-              </div>
                     </div>
+                )}
+                    </div>
+                  </div>
 
             {/* Weighting Schema Card */}
             <div className="bg-white rounded-2xl p-6 border border-gray-200 shadow-lg hover:shadow-xl transition-shadow">
@@ -482,10 +434,10 @@ export default function ProtocolDetailPage() {
                         style={{ width: `${w.value}%`, backgroundColor: w.color }}
                       />
                     </div>
-                  </div>
+                    </div>
                 ))}
-              </div>
-            </div>
+                  </div>
+                </div>
           </aside>
 
           {/* RIGHT CONTENT - CHARTS & ANALYSIS */}
@@ -513,8 +465,8 @@ export default function ProtocolDetailPage() {
                       {formatChange(data.current.change30d)}
                     </span>
                     <span className="text-xs text-gray-400 font-medium">vs 30d avg</span>
-                  </div>
                     </div>
+                  </div>
 
                 {/* Changes Grid */}
                 <div className="lg:col-span-2 p-8">
@@ -528,26 +480,26 @@ export default function ProtocolDetailPage() {
                          {data.current.momentum} Trend
                        </span>
                     )}
-                  </div>
+                    </div>
                   <div className="grid grid-cols-3 gap-6">
                     <div>
                       <div className="text-xs text-gray-400 font-medium mb-1">24H CHANGE</div>
                       <div className={`text-xl font-bold ${data.current.change24h && data.current.change24h >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {formatChange(data.current.change24h)}
                     </div>
-                    </div>
+                  </div>
                     <div>
                       <div className="text-xs text-gray-400 font-medium mb-1">7D CHANGE</div>
                       <div className={`text-xl font-bold ${data.current.change7d && data.current.change7d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {formatChange(data.current.change7d)}
-                  </div>
+                    </div>
                     </div>
                     <div>
                       <div className="text-xs text-gray-400 font-medium mb-1">30D CHANGE</div>
                       <div className={`text-xl font-bold ${data.current.change30d && data.current.change30d >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                         {formatChange(data.current.change30d)}
-                      </div>
-                    </div>
+                  </div>
+                </div>
                   </div>
                 </div>
               </div>
@@ -558,7 +510,7 @@ export default function ProtocolDetailPage() {
               <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
                   <div>
                   <h3 className="text-xl font-bold text-gray-900">Score Trajectory</h3>
-                  <p className="text-sm text-gray-500">Historical performance analysis</p>
+                  <p className="text-sm text-gray-500">Historical performance vs category average</p>
                   </div>
                 <div className="flex items-center gap-3">
                     <button
@@ -621,13 +573,13 @@ export default function ProtocolDetailPage() {
                       />
                       <Tooltip 
                         contentStyle={{ 
-                          backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                          backgroundColor: 'rgba(255, 255, 255, 0.98)',
                           border: 'none',
                           borderRadius: '12px',
-                          boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                          boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
                           padding: '12px 16px'
                         }}
-                        labelStyle={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px' }}
+                        labelStyle={{ color: '#6b7280', fontSize: '12px', marginBottom: '4px', fontWeight: 500 }}
                         formatter={(value: number, name: string) => {
                           if (name === 'score') return [<span className="text-[#49997E] font-bold text-lg">{value.toFixed(4)}</span>, 'SPT Score'];
                           if (name === 'momentumScore') return [<span className="text-orange-500 font-bold text-lg">{value.toFixed(4)}</span>, 'Self-Trend'];
@@ -642,6 +594,7 @@ export default function ProtocolDetailPage() {
                         fillOpacity={1} 
                         fill="url(#colorScore)" 
                         activeDot={{ r: 6, strokeWidth: 0, fill: '#49997E' }}
+                        animationDuration={1500}
                       />
                       {showMomentum && (
                         <Line 
@@ -653,6 +606,33 @@ export default function ProtocolDetailPage() {
                           dot={false}
                         />
                       )}
+                      {categoryAvg && (
+                        <ReferenceLine 
+                          y={categoryAvg} 
+                          stroke="#9ca3af" 
+                          strokeDasharray="3 3"
+                          label={{ 
+                            value: 'Avg', 
+                            position: 'right', 
+                            fill: '#9ca3af', 
+                            fontSize: 12 
+                          }}
+                        />
+                      )}
+                      {periodMax > 0 && (
+                         <ReferenceLine 
+                           y={periodMax} 
+                           stroke="#10b981" 
+                           strokeDasharray="3 3" 
+                           strokeOpacity={0.5}
+                           label={{ 
+                             value: 'High', 
+                             position: 'right', 
+                             fill: '#10b981', 
+                             fontSize: 12 
+                           }} 
+                        />
+                      )}
                     </AreaChart>
                   </ResponsiveContainer>
                 ) : (
@@ -661,9 +641,9 @@ export default function ProtocolDetailPage() {
                     <p>No chart data available</p>
                   </div>
                 )}
-              </div>
-              </div>
-              
+            </div>
+          </div>
+
             {/* Deep Dive Metrics Grid */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Detailed Metrics Panel */}
@@ -675,19 +655,19 @@ export default function ProtocolDetailPage() {
                 <div className="space-y-6">
                   {data.type === 'dex' && data.current.dexMetrics ? (
                     <>
-                  <div>
+                      <div>
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">Capital Efficiency (Vol/TVL)</span>
                           <span className="text-sm font-bold text-gray-900">{data.current.dexMetrics.capitalEfficiency.toFixed(3)}x</span>
                   </div>
                         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div className="h-full bg-purple-500 rounded-full" style={{ width: `${Math.min(data.current.dexMetrics.capitalEfficiency * 100, 100)}%` }}></div>
-                      </div>
+                  </div>
                         <p className="text-xs text-gray-500 mt-2">
                           Higher is better. Indicates how much volume is generated per $1 of TVL.
-                        </p>
-                      </div>
-                      
+                    </p>
+                  </div>
+                  
                       <div className="pt-4 border-t border-gray-100">
                         <div className="flex justify-between mb-1">
                           <span className="text-sm text-gray-600">Daily Revenue</span>
@@ -701,24 +681,32 @@ export default function ProtocolDetailPage() {
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">Utilization Rate</span>
                           <span className="text-sm font-bold text-gray-900">{data.current.lendingMetrics.utilization.toFixed(1)}%</span>
-                    </div>
+                      </div>
                         <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
                           <div className={`h-full rounded-full ${
                             data.current.lendingMetrics.utilization > 80 ? 'bg-orange-500' : 'bg-blue-500'
                           }`} style={{ width: `${data.current.lendingMetrics.utilization}%` }}></div>
-            </div>
-                      </div>
+          </div>
+        </div>
 
                       <div>
                         <div className="flex justify-between mb-2">
                           <span className="text-sm text-gray-600">
-                            Vanilla Supply
-                        </span>
+                            {data.type === 'cdp' ? 'Minted' : 'Borrowed'}
+                          </span>
                           <span className="text-sm font-bold text-gray-900">
-                            {data.current.lendingMetrics.vanillaSupplyRatio.toFixed(1)}%
+                            {formatCurrency(data.current.lendingMetrics.borrowVolume)}
+                        </span>
+                      </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-medium text-gray-500">
+                             {data.type === 'cdp' ? 'Collateral' : 'Supplied'}
+                          </span>
+                          <span className="text-base font-bold text-gray-900">
+                            {formatCurrency(data.current.lendingMetrics.supplyVolume)}
                           </span>
                         </div>
-                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                        <div className="h-2 bg-gray-100 rounded-full overflow-hidden mt-2">
                           <div className="h-full bg-green-500 rounded-full" style={{ 
                             width: `${data.current.lendingMetrics.vanillaSupplyRatio}%` 
                           }}></div>
@@ -726,17 +714,17 @@ export default function ProtocolDetailPage() {
                       </div>
                     </>
                   ) : null}
-                </div>
-              </div>
+                    </div>
+                      </div>
 
               {/* Key Insight Panel */}
               <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-3xl border border-blue-100 p-6 sm:p-8 flex flex-col justify-center">
                 <div className="flex items-center gap-2 mb-4">
                   <span className="bg-blue-600 text-white p-1.5 rounded-lg">
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                  </span>
+                        </span>
                   <h3 className="font-bold text-blue-900">Automated Insight</h3>
-          </div>
+                      </div>
                 
                 <p className="text-blue-800 leading-relaxed text-sm sm:text-base">
                   {data.type === 'dex' && data.current.dexMetrics ? (
@@ -756,10 +744,10 @@ export default function ProtocolDetailPage() {
                   ) : "Data analysis pending for this protocol type."}
             </p>
           </div>
-            </div>
+          </div>
 
           </main>
-          </div>
+        </div>
       </div>
     </div>
   );
