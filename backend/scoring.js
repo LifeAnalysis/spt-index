@@ -105,6 +105,12 @@ const DEFAULT_WEIGHTS = {
     vanillaSupply: 0.30,    // 30% - Blue-chip collateral (ETH, wBTC)
     utilization: 0.20,      // 20% - Debt ceiling utilization
     fees: 0.10              // 10% - Stability fee revenue
+  },
+  'liquid-staking': {
+    tvl: 0.50,              // 50% - Total value staked (dominance)
+    fees: 0.25,             // 25% - Fee revenue (sustainability)
+    volume: 0.15,           // 15% - Staking activity (deposits/withdrawals)
+    feeGrowth: 0.10         // 10% - TVL growth momentum
   }
 };
 

@@ -608,10 +608,14 @@ export async function getSPTIndex(protocols) {
   const dexCohortMetrics = buildCohortMetrics(dexProtocols);
   const lendingCohortMetrics = buildCohortMetrics(lendingProtocols);
   const cdpCohortMetrics = buildCohortMetrics(cdpProtocols);
+  const liquidStakingCohortMetrics = buildCohortMetrics(liquidStakingProtocols);
   
   // Calculate both scores for each protocol
   const scored = validMetrics.map(p => {
-    const cohortMetrics = p.type === 'dex' ? dexCohortMetrics : (p.type === 'cdp' ? cdpCohortMetrics : lendingCohortMetrics);
+    const cohortMetrics = p.type === 'dex' ? dexCohortMetrics : 
+                         p.type === 'cdp' ? cdpCohortMetrics : 
+                         p.type === 'liquid-staking' ? liquidStakingCohortMetrics :
+                         lendingCohortMetrics;
     
     // Calculate current SPT score (cross-protocol comparison)
     let rawScore = 0;
@@ -673,6 +677,28 @@ export async function getSPTIndex(protocols) {
           vanillaSupply: p.tvl30dAgo * currentVanillaRatio,
           utilization: currentUtilization,
           fees: p.fees30d / 30
+        };
+      } else if (p.type === 'liquid-staking') {
+        // For liquid-staking: use TVL, fees, volume (staking activity), feeGrowth
+        historicalMetrics24h = {
+          tvl: p.tvl24hAgo,
+          fees: p.currentMetrics.fees,
+          volume: p.currentMetrics.volume,
+          feeGrowth: 0
+        };
+        
+        historicalMetrics7d = {
+          tvl: p.tvl7dAgo,
+          fees: p.fees7d / 7,
+          volume: p.volume7d / 7,
+          feeGrowth: 0
+        };
+        
+        historicalMetrics30d = {
+          tvl: p.tvl30dAgo,
+          fees: p.fees30d / 30,
+          volume: p.volume30d / 30,
+          feeGrowth: 0
         };
       } else {
         // For DEX: use volume, capitalEfficiency, fees, feeGrowth
