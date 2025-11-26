@@ -23,7 +23,7 @@ export default function Home() {
       setLoading(true);
       setError(null);
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/spt';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spt-index-production.up.railway.app/api/spt';
       // Add cache-busting timestamp to bypass HTTP caching
       const cacheBuster = `?t=${Date.now()}`;
       console.log('📡 Fetching from:', API_URL + cacheBuster);

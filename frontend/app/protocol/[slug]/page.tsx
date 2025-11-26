@@ -28,7 +28,7 @@ export default function ProtocolDetailPage() {
       setLoading(true);
       setError(null);
       
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://spt-index-production.up.railway.app';
       
       const headers: HeadersInit = {};
       if (etag) {
