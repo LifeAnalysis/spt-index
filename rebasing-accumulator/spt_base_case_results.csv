@@ -1,0 +1,6 @@
+Scenario,Daily Δ,Price,Balance,Total,Final Value,Return
+Big Winner,+0.20,1.793x,1.100x,1.973x,"$19,725",+97.3%
+Small Winner,+0.02,1.060x,1.100x,1.166x,"$11,662",+16.6%
+Neutral,+0.00,1.000x,1.100x,1.100x,"$11,000",+10.0%
+Small Loser,-0.02,0.943x,1.100x,1.038x,"$10,376",+3.8%
+Big Loser,-0.20,0.558x,1.100x,0.613x,"$6,134",-38.7%
